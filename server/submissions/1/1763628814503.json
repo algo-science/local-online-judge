@@ -1,0 +1,9 @@
+{
+    "id": 1763628814503,
+    "problem_id": 1,
+    "language": "cpp",
+    "code": "#include <bits/stdc++.h> \nusing namespace std; \n\nint main() {\n   int x,y;\n   cin >> x >> y;\n   cout << x + y << \"\\n\" ;\n}",
+    "status": "Compilation Error",
+    "output": "temp/e457535e-53c3-4caa-8b65-0be545c4b4a0.cpp:1:10: fatal error: 'bits/stdc++.h' file not found\n    1 | #include <bits/stdc++.h> \n      |          ^~~~~~~~~~~~~~~\n1 error generated.\n",
+    "timestamp": "2025-11-20 14:23:34"
+}

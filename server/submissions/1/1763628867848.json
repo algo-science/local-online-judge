@@ -1,0 +1,9 @@
+{
+    "id": 1763628867848,
+    "problem_id": 1,
+    "language": "python",
+    "code": "a, b = map(int, input().split())\nprint(a - b)",
+    "status": "Wrong Answer",
+    "output": "Test Case 1 Failed. Expected: 3, Got: -1",
+    "timestamp": "2025-11-20 14:24:27"
+}

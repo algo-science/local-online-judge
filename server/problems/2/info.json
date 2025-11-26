@@ -1,0 +1,28 @@
+{
+    "title": "Factorial of N",
+    "description": "Given a non-negative integer $N$, calculate $N!$ (N factorial).\n\n$N!$ is defined as:\n$$ N! = N \\times (N-1) \\times \\dots \\times 1 $$\n\nNote that $0! = 1$.",
+    "input_format": "A single integer $N$.",
+    "output_format": "Print the factorial of $N$.",
+    "constraints": "$0 \\le N \\le 10$",
+    "sample_input": "5",
+    "sample_output": "120",
+    "test_cases": [
+        {
+            "input": "0",
+            "output": "1"
+        },
+        {
+            "input": "1",
+            "output": "1"
+        },
+        {
+            "input": "5",
+            "output": "120"
+        },
+        {
+            "input": "6",
+            "output": "720"
+        }
+    ],
+    "editorial": "We can solve this problem using either iteration or recursion.\n\n**Recursive Approach:**\n$$ f(n) = n \\times f(n-1) $$\nBase case: $f(0) = 1$."
+}

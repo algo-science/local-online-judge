@@ -1,0 +1,24 @@
+{
+    "title": "A + B Problem",
+    "description": "Given two integers $A$ and $B$, output their sum.\n\n### Example\nIf $A=1$ and $B=2$, the output should be $3$.",
+    "input_format": "Two space-separated integers A and B.",
+    "output_format": "A single integer representing the sum.",
+    "constraints": "$1 \\le A, B \\le 1000$",
+    "sample_input": "1 2",
+    "sample_output": "3",
+    "test_cases": [
+        {
+            "input": "1 2",
+            "output": "3"
+        },
+        {
+            "input": "10 20",
+            "output": "30"
+        },
+        {
+            "input": "-5 5",
+            "output": "0"
+        }
+    ],
+    "editorial": "The problem asks us to compute the sum of two integers. We can simply read the input and print the result of the addition operator `+`.\n\nTime Complexity: $O(1)$"
+}
