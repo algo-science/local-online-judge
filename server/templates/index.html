@@ -668,6 +668,9 @@
 
     let timerInterval;
     function startTimer() {
+       if (timerInterval) {
+           clearInterval(timerInterval);
+       }
         let seconds = 0;
         timerInterval = setInterval(() => {
             seconds++;
@@ -825,11 +828,13 @@
                 }).catch((err) => console.log(err));
             }
 
-        } catch (e) {
-            console.error(e);
-            app.innerHTML = '<p>Error loading problem details.</p>';
-        }
-    }
+            startTimer();
+ 
+         } catch (e) {
+             console.error(e);
+             app.innerHTML = '<p>Error loading problem details.</p>';
+         }
+     }
 
     let editor;
 
