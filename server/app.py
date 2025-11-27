@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from core.executor import execute_code
-from core.file_handler import get_problems_from_fs, get_problem_from_fs, get_submissions_from_fs, save_submission_to_fs, get_quizzes_from_fs, read_sessions, write_sessions, read_tags, write_tags, read_favorites, write_favorites
+from core.file_handler import get_problems_from_fs, get_problem_from_fs, get_submissions_from_fs, save_submission_to_fs, get_quizzes_from_fs, read_sessions, write_sessions, read_tags, write_tags, read_favorites, write_favorites, read_ratings, write_ratings
 from utils.importer import import_problems
 from flask import Flask, request, jsonify, render_template
 import time
@@ -225,6 +225,20 @@ def toggle_favorite(problem_id):
         favorites.append(problem_id)
     write_favorites(favorites)
     return jsonify({"success": True, "is_favorite": problem_id in favorites})
+
+@app.route('/api/problems/<problem_id>/rating', methods=['POST'])
+def update_rating(problem_id):
+    data = request.get_json()
+    rating = data.get('rating')
+    
+    if rating is None:
+        return jsonify({"error": "Rating is required"}), 400
+        
+    ratings = read_ratings()
+    ratings[problem_id] = int(rating)
+    write_ratings(ratings)
+    
+    return jsonify({"success": True, "rating": rating})
 
 
 if __name__ == '__main__':

@@ -9,6 +9,7 @@ QUIZZES_DIR = os.path.join(BASE_DIR, "quizzes")
 SESSIONS_FILE = os.path.join(os.path.dirname(__file__), 'sessions.json')
 TAGS_FILE = os.path.join(os.path.dirname(__file__), 'tags.json')
 FAVORITES_FILE = os.path.join(os.path.dirname(__file__), 'favorites.json')
+RATINGS_FILE = os.path.join(os.path.dirname(__file__), 'ratings.json')
 
 os.makedirs(PROBLEMS_DIR, exist_ok=True)
 os.makedirs(SUBMISSIONS_DIR, exist_ok=True)
@@ -44,10 +45,21 @@ def write_favorites(data):
     with open(FAVORITES_FILE, 'w') as f:
         json.dump(data, f, indent=4)
 
+def read_ratings():
+    if not os.path.exists(RATINGS_FILE):
+        return {}
+    with open(RATINGS_FILE, 'r') as f:
+        return json.load(f)
+
+def write_ratings(data):
+    with open(RATINGS_FILE, 'w') as f:
+        json.dump(data, f, indent=4)
+
 def get_problems_from_fs():
     sessions = read_sessions()
     tags_map = read_tags()
     favorites = read_favorites()
+    ratings = read_ratings()
     all_problems = []
     for group_folder in os.listdir(PROBLEMS_DIR):
         group_path = os.path.join(PROBLEMS_DIR, group_folder)
@@ -74,7 +86,8 @@ def get_problems_from_fs():
                         "title": title,
                         "status": status,
                         "tags": tags_map.get(problem_id, []),
-                        "is_favorite": problem_id in favorites
+                        "is_favorite": problem_id in favorites,
+                        "rating": ratings.get(problem_id, 0)
                     })
 
     grouped_problems = {}
@@ -95,8 +108,28 @@ def get_problems_from_fs():
     
     if uncategorized_problems:
         grouped_problems['Uncategorized'] = uncategorized_problems
+    
+    # Attach documentation content to groups if available
+    grouped_problems_with_docs = {}
+    for group_name, problems in grouped_problems.items():
+        doc_content = ""
+        # Assuming directory structure matches group name
+        # This might need refinement if group name != folder name
+        # For now, we'll search for a folder in PROBLEMS_DIR that matches the group name
+        # Note: 'Uncategorized' is virtual and won't have a folder
+        group_path = os.path.join(PROBLEMS_DIR, group_name)
+        if os.path.isdir(group_path):
+            docs_file = os.path.join(group_path, 'docs.md')
+            if os.path.exists(docs_file):
+                with open(docs_file, 'r') as f:
+                    doc_content = f.read()
+        
+        grouped_problems_with_docs[group_name] = {
+            "problems": problems,
+            "docs": doc_content
+        }
             
-    return grouped_problems
+    return grouped_problems_with_docs
 
 def get_problem_from_fs(problem_id):
     try:
@@ -133,7 +166,8 @@ def get_problem_from_fs(problem_id):
             "editorial": editorial,
             "sample_input": inputs[0] if inputs else "",
             "sample_output": outputs[0] if outputs else "",
-            "is_favorite": problem_id in read_favorites()
+            "is_favorite": problem_id in read_favorites(),
+            "rating": read_ratings().get(problem_id, 0)
         }
         return problem_data
     except Exception as e:

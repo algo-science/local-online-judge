@@ -34,34 +34,63 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <style>
-        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --light: #ecf0f1; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f5f6fa; color: #333; }
-        nav { background: var(--primary); color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
-        nav a { color: white; text-decoration: none; margin-left: 20px; cursor: pointer; font-weight: bold; }
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --light: #ecf0f1;
+            --bg-body: #f5f6fa;
+            --bg-container: white;
+            --text-main: #333;
+            --text-secondary: #34495e;
+            --border: #ddd;
+            --item-hover: #f5f5f5;
+            --item-bg: #f9f9f9;
+            --nav-text: white;
+        }
+
+        [data-theme="dark"] {
+            --primary: #1a1a1a;
+            --secondary: #ecf0f1;
+            --accent: #3498db;
+            --light: #2c3e50;
+            --bg-body: #121212;
+            --bg-container: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-secondary: #ecf0f1;
+            --border: #444;
+            --item-hover: #2c2c2c;
+            --item-bg: #252525;
+            --nav-text: #e0e0e0;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg-body); color: var(--text-main); transition: background 0.3s, color 0.3s; }
+        nav { background: var(--primary); color: var(--nav-text); padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        nav a { color: var(--nav-text); text-decoration: none; margin-left: 20px; cursor: pointer; font-weight: bold; }
         nav a:hover { color: var(--accent); }
-        .container { max-width: 1000px; margin: 2rem auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-height: 80vh; }
-        h1, h2, h3 { color: var(--secondary); }
+        .container { max-width: 1000px; margin: 2rem auto; padding: 20px; background: var(--bg-container); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-height: 80vh; }
+        h1, h2, h3 { color: var(--text-secondary); }
         
         /* Forms */
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; background: var(--bg-container); color: var(--text-main); }
         button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 1rem; }
         button:hover { opacity: 0.9; }
         
         /* Lists */
-        .problem-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .problem-item { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .problem-item:last-child { border-bottom: none; }
         .problem-item a { color: var(--accent); text-decoration: none; font-weight: bold; font-size: 1.1rem; }
         
         /* Problem Detail */
-        .problem-header { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
-        .description { background: #f9f9f9; padding: 15px; border-radius: 4px; }
+        .problem-header { border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+        .description { background: var(--item-bg); padding: 15px; border-radius: 4px; }
         .description img { max-width: 100%; }
-        .code-editor { font-family: monospace; min-height: 200px; border: 1px solid #eee; }
+        .code-editor { font-family: monospace; min-height: 200px; border: 1px solid var(--border); }
         .CodeMirror { height: 400px; font-size: 14px; border-radius: 4px; }
-        .submission-details { background: #f9f9f9; padding: 10px; margin-top: 5px; font-size: 0.9rem; display: none; }
-        .submission-item:hover { background: #f5f5f5; }
+        .submission-details { background: var(--item-bg); padding: 10px; margin-top: 5px; font-size: 0.9rem; display: none; }
+        .submission-item:hover { background: var(--item-hover); }
         
         /* Status */
         .status-accepted { color: green; font-weight: bold; }
@@ -80,22 +109,47 @@
         /* Helper classes */
         .hidden { display: none; }
         .btn-sm { padding: 5px 10px; font-size: 0.9rem; }
-        .problem-group { border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; }
-        .group-header { background: #f9f9f9; padding: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .problem-sublist { padding-left: 20px; border-top: 1px solid #eee; display: block; } /* Initially visible */
+        .problem-group { border: 1px solid var(--border); border-radius: 4px; margin-bottom: 10px; }
+        .group-header { background: var(--item-bg); padding: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .problem-sublist { padding-left: 20px; border-top: 1px solid var(--border); display: block; } /* Initially visible */
         .btn-danger { background-color: #e74c3c; }
         .actions-menu { position: relative; }
         .actions-menu .dots { cursor: pointer; padding: 5px; }
-        .actions-menu-content { display: none; position: absolute; right: 0; background-color: #f9f9f9; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; border-radius: 4px; }
-        .actions-menu-content a, .actions-menu-content .btn-sm { color: black; padding: 12px 16px; text-decoration: none; display: block; background: none; width: 100%; text-align: left; border: none; }
-        .actions-menu-content a:hover, .actions-menu-content .btn-sm:hover { background-color: #f1f1f1; }
+        .actions-menu-content { display: none; position: absolute; right: 0; background-color: var(--bg-container); min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; border-radius: 4px; border: 1px solid var(--border); }
+        .actions-menu-content a, .actions-menu-content .btn-sm { color: var(--text-main); padding: 12px 16px; text-decoration: none; display: block; background: none; width: 100%; text-align: left; border: none; }
+        .actions-menu-content a:hover, .actions-menu-content .btn-sm:hover { background-color: var(--item-hover); }
         .show { display: block; }
         /* Tags */
-        .tag-badge { background: #e0e0e0; color: #333; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin-right: 5px; display: inline-block; }
+        .tag-badge { background: var(--item-bg); color: var(--text-main); border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin-right: 5px; display: inline-block; }
         .tag-filter-container { margin-left: 10px; display: flex; align-items: center; gap: 5px; }
+        .theme-toggle { cursor: pointer; font-size: 1.2rem; margin-left: 20px; }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: var(--bg-container); margin: 15% auto; padding: 20px; border: 1px solid var(--border); border-radius: 8px; width: 80%; max-width: 500px; color: var(--text-main); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .modal-close:hover, .modal-close:focus { color: var(--text-main); text-decoration: none; cursor: pointer; }
+        .modal-footer { margin-top: 20px; text-align: right; }
     </style>
 </head>
 <body>
+
+<div id="custom-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title" style="margin: 0;">Modal Title</h3>
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+        </div>
+        <div id="modal-body">
+            <input type="text" id="modal-input" style="width: 100%;">
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeModal()" style="background: #95a5a6;">Cancel</button>
+            <button id="modal-confirm-btn">Confirm</button>
+        </div>
+    </div>
+</div>
 
 <nav>
     <div class="logo">
@@ -109,6 +163,7 @@
         <a onclick="importProblems()">Import Problems</a>
         <a onclick="navigate('contests')">Contests</a>
         <a onclick="navigate('quizzes')">Quizzes</a>
+        <i class="fas fa-moon theme-toggle" onclick="toggleTheme()" id="theme-icon" title="Toggle Dark Mode"></i>
     </div>
 </nav>
 
@@ -118,6 +173,82 @@
 
 <script>
     const app = document.getElementById('app');
+    const modal = document.getElementById("custom-modal");
+    const modalTitle = document.getElementById("modal-title");
+    const modalInput = document.getElementById("modal-input");
+    const modalConfirmBtn = document.getElementById("modal-confirm-btn");
+
+    function openModal(title, placeholder, onConfirm, initialValue = "") {
+        modalTitle.innerText = title;
+        modalInput.placeholder = placeholder;
+        modalInput.value = initialValue;
+        modal.style.display = "block";
+        modalInput.focus();
+        
+        // Remove previous event listeners
+        const newBtn = modalConfirmBtn.cloneNode(true);
+        modalConfirmBtn.parentNode.replaceChild(newBtn, modalConfirmBtn);
+        
+        // Reassign to the new button variable to keep reference fresh if we needed it globally,
+        // but we just need to attach listener to the current element in DOM.
+        const currentBtn = document.getElementById("modal-confirm-btn");
+        
+        currentBtn.onclick = () => {
+            const value = modalInput.value;
+            if (value) { // Or allow empty? Let's depend on the caller logic if needed
+                onConfirm(value);
+                closeModal();
+            } else {
+               // Optional: shake input or show error
+               onConfirm(value); // Allow passing empty value, let callback handle validation
+               closeModal();
+            }
+        };
+
+        // Enter key to confirm
+        modalInput.onkeyup = function(event) {
+            if (event.key === 'Enter') {
+                currentBtn.click();
+            }
+        }
+    }
+
+    function closeModal() {
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+        if (!event.target.matches('.dots') && !event.target.closest('.actions-menu-content')) {
+            closeAllMenus();
+        }
+    }
+
+    // Theme Logic
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+    }
+
+    function updateThemeIcon(theme) {
+        const icon = document.getElementById('theme-icon');
+        if (theme === 'dark') {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
+    }
 
     function navigate(view, params = {}) {
         window.location.hash = view;
@@ -144,6 +275,8 @@
                     <option value="default">Sort by Default</option>
                     <option value="date_asc">Sort by Date (Oldest)</option>
                     <option value="date_desc">Sort by Date (Newest)</option>
+                    <option value="rating_desc">Sort by Rating (High to Low)</option>
+                    <option value="rating_asc">Sort by Rating (Low to High)</option>
                 </select>
                 <select id="filter-by" onchange="renderProblemList(getFilterOptions())">
                     <option value="all">Show All</option>
@@ -155,7 +288,6 @@
                 <label style="display: flex; align-items: center; gap: 5px; font-weight: normal; margin-bottom: 0;">
                     <input type="checkbox" id="show-tags-toggle" ${showTags ? 'checked' : ''} onchange="renderProblemList(getFilterOptions())"> Show Tags
                 </label>
-                <input type="text" id="new-session-name" placeholder="New Session Name">
                 <button onclick="addSession()">Add Session</button>
             </div>
             <div id="problem-list">Loading...</div>
@@ -179,9 +311,21 @@
             const res = await fetch('/api/problems');
             const groupedProblems = await res.json();
             
+            // Helper to normalize the response structure since file_handler changed
+            const normalizedGroups = {};
+            for (const key in groupedProblems) {
+                if (Array.isArray(groupedProblems[key])) {
+                    normalizedGroups[key] = { problems: groupedProblems[key], docs: "" };
+                } else {
+                    normalizedGroups[key] = groupedProblems[key];
+                }
+            }
+
             let allProblems = [];
-            for (const groupName in groupedProblems) {
-                groupedProblems[groupName].forEach(p => {
+            for (const groupName in normalizedGroups) {
+                const groupData = normalizedGroups[groupName];
+                const problems = groupData.problems || [];
+                problems.forEach(p => {
                     p.group = groupName;
                     allProblems.push(p);
                 });
@@ -219,6 +363,10 @@
                 allProblems.sort((a, b) => a.id.split('-')[0] - b.id.split('-')[0]); // simplified date sort
             } else if (sortBy === 'date_desc') {
                 allProblems.sort((a, b) => b.id.split('-')[0] - a.id.split('-')[0]);
+            } else if (sortBy === 'rating_desc') {
+                allProblems.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+            } else if (sortBy === 'rating_asc') {
+                allProblems.sort((a, b) => (a.rating || 0) - (b.rating || 0));
             }
             
             // Regroup after filtering/sorting
@@ -238,6 +386,9 @@
                 if (problems.length === 0) continue;
                 hasProblems = true;
 
+                const groupDocs = normalizedGroups[groupName]?.docs || '';
+                const docsHtml = groupDocs ? `<div class="description" style="margin-bottom: 10px; border-left: 4px solid var(--accent);">${marked.parse(groupDocs)}</div>` : '';
+
                 const actionsHtml = groupName === 'Uncategorized' ? '' : `
                     <div class="actions-menu">
                         <i class="fas fa-ellipsis-h dots" onclick="toggleActionsMenu(event, '${groupName}')"></i>
@@ -255,11 +406,14 @@
                             ${actionsHtml}
                         </div>
                         <div id="group-${groupName}" class="problem-sublist">
+                            ${docsHtml}
                 `;
                 problems.forEach(p => {
                     const tagsHtml = showTags && p.tags ?
                         `<div style="margin-top: 5px; margin-left: 25px;">${p.tags.map(t => `<span class="tag-badge">${t}</span>`).join('')}</div>` : '';
                     
+                    const ratingHtml = p.rating ? `<span class="tag-badge" style="background: #ffc107; color: #333;">★ ${p.rating}</span>` : '';
+
                     listHtml += `
                         <div class="problem-item">
                             <div style="flex-grow: 1;">
@@ -267,6 +421,7 @@
                                     <i class="favorite-btn ${p.is_favorite ? 'fas' : 'far'} fa-star" onclick="toggleFavorite(event, '${p.id}')"></i>
                                     ${p.title}
                                     ${p.status === 'Solved' ? '<i class="fas fa-check-circle status-solved" style="margin-left: 8px;"></i>' : ''}
+                                    ${ratingHtml}
                                 </a>
                                 ${tagsHtml}
                             </div>
@@ -279,6 +434,7 @@
                                         ${sessionOptions}
                                     </select>
                                     <a href="#" onclick="manageTags(event, '${p.id}', '${(p.tags || []).join(',')}')">Manage Tags</a>
+                                    <a href="#" onclick="setRating(event, '${p.id}', ${p.rating || 0})">Set Rating</a>
                                     <button class="btn-sm btn-danger" onclick="deleteProblem(event, '${p.id}')">Delete</button>
                                 </div>
                             </div>
@@ -349,31 +505,49 @@
     async function manageTags(event, problemId, currentTagsStr) {
         event.stopPropagation();
         closeAllMenus();
-        const newTagsStr = prompt("Enter tags separated by commas:", currentTagsStr);
-        if (newTagsStr !== null) {
-            const tags = newTagsStr.split(',').map(t => t.trim()).filter(t => t);
-            await fetch(`/api/problems/${problemId}/tags`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tags })
-            });
-            renderProblemList(getFilterOptions());
-        }
+        openModal("Manage Tags", "Enter tags separated by commas", async (newTagsStr) => {
+            if (newTagsStr !== null) {
+                const tags = newTagsStr.split(',').map(t => t.trim()).filter(t => t);
+                await fetch(`/api/problems/${problemId}/tags`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tags })
+                });
+                renderProblemList(getFilterOptions());
+            }
+        }, currentTagsStr);
     }
 
+    async function setRating(event, problemId, currentRating) {
+        event.stopPropagation();
+        closeAllMenus();
+        openModal("Set Rating", "Enter rating (0-3500)", async (newRating) => {
+            if (newRating !== null) {
+                const rating = parseInt(newRating, 10);
+                if (isNaN(rating)) return;
+                
+                await fetch(`/api/problems/${problemId}/rating`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rating })
+                });
+                renderProblemList(getFilterOptions());
+            }
+        }, currentRating ? String(currentRating) : "");
+    }
+
+
     async function addSession() {
-        const name = document.getElementById('new-session-name').value;
-        if (!name) {
-            alert('Please enter a session name.');
-            return;
-        }
-        await fetch('/api/sessions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name }),
+        openModal("Add Session", "Enter session name", async (name) => {
+            if (name) {
+                await fetch('/api/sessions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name }),
+                });
+                renderProblemList(getFilterOptions());
+            }
         });
-        document.getElementById('new-session-name').value = '';
-        renderProblemList(getFilterOptions());
     }
 
     async function assignToSession(event, problemId) {
@@ -390,15 +564,16 @@
     }
 
     async function renameSession(oldName) {
-        const newName = prompt('Enter the new name for the session:', oldName);
-        if (newName && newName !== oldName) {
-            await fetch('/api/sessions/rename', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ old_name: oldName, new_name: newName }),
-            });
-            renderProblemList(getFilterOptions());
-        }
+        openModal("Rename Session", "Enter new session name", async (newName) => {
+            if (newName && newName !== oldName) {
+                await fetch('/api/sessions/rename', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ old_name: oldName, new_name: newName }),
+                });
+                renderProblemList(getFilterOptions());
+            }
+        }, oldName);
     }
 
     function toggleActionsMenu(event, problemId) {
@@ -417,11 +592,7 @@
         }
     }
 
-    window.onclick = function(event) {
-        if (!event.target.matches('.dots') && !event.target.closest('.actions-menu-content')) {
-            closeAllMenus();
-        }
-    }
+    // window.onclick handled with modal logic
 
     function toggleGroup(groupName) {
         const group = document.getElementById(`group-${groupName}`);
