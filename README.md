@@ -12,18 +12,15 @@ A lightweight, local online judge system for competitive programming enthusiasts
 *   **Local Execution:** Run and test your code locally against sample cases.
 *   **Submissions:** Track your submission history.
 
-## Setup
+## Setup (with Docker)
 
-1.  **Prerequisites:** Ensure you have Python 3 installed.
-2.  **Installation:**
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
-    pip install flask
-    ```
+1.  **Prerequisites:** Ensure you have Docker and Docker Compose installed.
+2.  **Environment Variables:**
+    -   Rename the `.env.example` file to `.env`.
+    -   Open the `.env` file and replace `"YOUR_API_KEY_HERE"` with your actual API key for the AI review feature.
 3.  **Running the Server:**
     ```bash
-    python3 server/app.py
+    docker-compose up --build
     ```
     The application will be available at `http://127.0.0.1:5002`.
 
