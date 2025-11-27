@@ -39,3 +39,77 @@ A lightweight, local online judge system for competitive programming enthusiasts
 ## License
 
 [MIT License](LICENSE)
+
+## Adding New Problems
+
+There are two ways to add problems to the system:
+
+### 1. Using the Web Interface
+
+1.  Navigate to the **Add Problem** tab in the navigation bar.
+2.  Fill in the problem details:
+    *   **Title:** The name of the problem.
+    *   **Description:** Problem statement (supports Markdown and LaTeX).
+    *   **Input/Output Format:** Describe expected IO.
+    *   **Sample Cases:** Provide examples.
+    *   **Test Cases:** Add IO pairs for judging.
+    *   **Editorial:** Explanation of the solution.
+3.  Click **Create Problem**.
+
+### 2. Importing Problems (Manual File Creation)
+
+You can bulk import problems by creating the directory structure in the `server/problems/` directory.
+
+**Directory Structure:**
+The system expects problems to be organized by **Category** (Session) and then by **Problem Name**.
+
+```
+server/problems/
+├── Graph_Theory/              # Category / Session Name
+│   ├── Breadth_First_Search/  # Problem Name (folders use underscores)
+│   │   ├── statement.md       # Problem Statement & Editorial
+│   │   ├── input.txt          # Test Case Inputs
+│   │   └── output.txt         # Test Case Outputs
+│   └── Depth_First_Search/
+│       ├── ...
+└── Dynamic_Programming/
+    └── ...
+```
+
+**File Formats:**
+
+*   **`statement.md`**: Contains the problem description in Markdown. You can separate the editorial at the bottom using `---` followed by `## Editorial`.
+    ```markdown
+    # Problem Title
+    
+    Detailed problem description here...
+    
+    **Input:** ...
+    **Output:** ...
+    
+    ---
+    ## Editorial
+    
+    Explanation of the solution...
+    ```
+
+*   **`input.txt`**: Contains input for all test cases, separated by `---` on a new line.
+    ```text
+    1 2
+    ---
+    10 20
+    ---
+    -5 5
+    ```
+
+*   **`output.txt`**: Contains expected output for all test cases, separated by `---` on a new line. Order must match `input.txt`.
+    ```text
+    3
+    ---
+    30
+    ---
+    0
+    ```
+
+**Importing:**
+After adding the files, go to the web interface and click **"Import Problems"** in the navigation bar. This will scan the `server/problems/` directory and add any new problems to the system.
