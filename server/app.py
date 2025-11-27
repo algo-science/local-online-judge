@@ -13,14 +13,23 @@ app = Flask(__name__, static_folder="static", template_folder="templates")
 
 @app.route('/')
 def index():
+    """Renders the main application page."""
     return render_template('index.html')
 
 @app.route('/api/problems', methods=['GET'])
 def get_problems():
+    """Retrieves a list of all problems, grouped by category."""
     return jsonify(get_problems_from_fs())
 
 @app.route('/api/problems/<problem_id>', methods=['GET'])
 def get_problem(problem_id):
+    """
+    Retrieves a single problem by its ID.
+    Args:
+        problem_id: The ID of the problem to retrieve.
+    Returns:
+        A JSON object containing the problem details, or a 404 error if not found.
+    """
     problem = get_problem_from_fs(problem_id)
     if problem is None:
         return jsonify({"error": "Problem not found"}), 404
@@ -28,6 +37,10 @@ def get_problem(problem_id):
 
 @app.route('/api/submit', methods=['POST'])
 def submit_code():
+    """
+    Receives code submitted by a user, executes it against test cases,
+    and returns the results.
+    """
     data = request.get_json()
     problem_id = data.get('problem_id')
     language = data.get('language')
@@ -102,18 +115,28 @@ def submit_code():
 
 @app.route('/api/submissions/<problem_id>', methods=['GET'])
 def get_submissions(problem_id):
+    """
+    Retrieves all submissions for a specific problem.
+    Args:
+        problem_id: The ID of the problem.
+    Returns:
+        A JSON array of submission objects.
+    """
     return jsonify(get_submissions_from_fs(problem_id))
 
 @app.route('/api/quizzes', methods=['GET'])
 def get_quizzes():
+    """Retrieves a list of all available quizzes."""
     return jsonify(get_quizzes_from_fs())
 
 @app.route('/api/sessions', methods=['GET'])
 def get_sessions():
+    """Retrieves all problem sessions."""
     return jsonify(read_sessions())
 
 @app.route('/api/sessions', methods=['POST'])
 def add_session():
+    """Creates a new, empty session."""
     data = request.get_json()
     name = data.get('name')
     if not name:
@@ -129,6 +152,7 @@ def add_session():
 
 @app.route('/api/sessions/assign', methods=['POST'])
 def assign_to_session():
+    """Assigns a problem to a specific session."""
     data = request.get_json()
     session_name = data.get('session_name')
     problem_id = data.get('problem_id')
@@ -153,6 +177,7 @@ def assign_to_session():
 
 @app.route('/api/sessions/rename', methods=['POST'])
 def rename_session():
+    """Renames an existing session."""
     data = request.get_json()
     old_name = data.get('old_name')
     new_name = data.get('new_name')
@@ -179,11 +204,18 @@ def rename_session():
 
 @app.route('/api/import', methods=['POST'])
 def import_all_problems():
+    """Scans the filesystem for new problems and imports them."""
     result = import_problems()
     return jsonify(result)
 
 @app.route('/api/submissions/<problem_id>/<submission_id>/editorial', methods=['POST'])
 def toggle_editorial(problem_id, submission_id):
+    """
+    Marks or unmarks a submission as an editorial.
+    Args:
+        problem_id: The ID of the problem.
+        submission_id: The ID of the submission.
+    """
     sub_prob_dir = os.path.join(os.path.dirname(__file__), 'submissions', str(problem_id))
     submission_file = os.path.join(sub_prob_dir, f"{submission_id}.json")
 
@@ -201,6 +233,11 @@ def toggle_editorial(problem_id, submission_id):
 
 @app.route('/api/problems/<problem_id>/tags', methods=['POST'])
 def update_tags(problem_id):
+    """
+    Updates the tags for a specific problem.
+    Args:
+        problem_id: The ID of the problem.
+    """
     data = request.get_json()
     tags = data.get('tags', [])
     
@@ -212,6 +249,7 @@ def update_tags(problem_id):
 
 @app.route('/api/tags', methods=['GET'])
 def get_all_tags():
+    """Retrieves a list of all unique tags used across all problems."""
     tags_map = read_tags()
     unique_tags = set()
     for tags in tags_map.values():
@@ -220,6 +258,11 @@ def get_all_tags():
 
 @app.route('/api/problems/<problem_id>/favorite', methods=['POST'])
 def toggle_favorite(problem_id):
+    """
+    Toggles the favorite status of a problem.
+    Args:
+        problem_id: The ID of the problem.
+    """
     favorites = read_favorites()
     if problem_id in favorites:
         favorites.remove(problem_id)
@@ -230,6 +273,11 @@ def toggle_favorite(problem_id):
 
 @app.route('/api/problems/<problem_id>/rating', methods=['POST'])
 def update_rating(problem_id):
+    """
+    Updates the rating for a specific problem.
+    Args:
+        problem_id: The ID of the problem.
+    """
     data = request.get_json()
     rating = data.get('rating')
     
@@ -244,6 +292,9 @@ def update_rating(problem_id):
 
 @app.route('/api/review', methods=['POST'])
 def review_code():
+    """
+    Sends code to an AI for a review and returns the feedback.
+    """
     data = request.get_json()
     code = data.get('code')
     problem_id = data.get('problem_id')
@@ -264,11 +315,21 @@ def review_code():
 # Calendar routes
 @app.route('/api/calendar/<date_str>', methods=['GET'])
 def get_calendar_tasks(date_str):
+    """
+    Retrieves all tasks for a specific date from the calendar.
+    Args:
+        date_str: The date in YYYY-MM-DD format.
+    """
     tasks = calendar_handler.get_tasks_for_date(date_str)
     return jsonify(tasks)
 
 @app.route('/api/calendar/<date_str>', methods=['POST'])
 def add_calendar_task(date_str):
+    """
+    Adds a new task to the calendar for a specific date.
+    Args:
+        date_str: The date in YYYY-MM-DD format.
+    """
     data = request.get_json()
     description = data.get('description')
     if not description:
@@ -278,6 +339,12 @@ def add_calendar_task(date_str):
 
 @app.route('/api/calendar/<date_str>/<int:task_id>', methods=['PUT'])
 def update_calendar_task(date_str, task_id):
+    """
+    Updates the status of a calendar task.
+    Args:
+        date_str: The date of the task.
+        task_id: The ID of the task to update.
+    """
     data = request.get_json()
     completed = data.get('completed')
     if completed is None:
@@ -289,6 +356,12 @@ def update_calendar_task(date_str, task_id):
 
 @app.route('/api/calendar/<date_str>/<int:task_id>', methods=['DELETE'])
 def delete_calendar_task(date_str, task_id):
+    """
+    Deletes a task from the calendar.
+    Args:
+        date_str: The date of the task.
+        task_id: The ID of the task to delete.
+    """
     if calendar_handler.delete_task(date_str, task_id):
         return jsonify({"success": True})
     return jsonify({"error": "Task not found"}), 404
