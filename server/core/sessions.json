@@ -1,6 +1,6 @@
 [
     {
-        "name": "New Session",
+        "name": "Session 1",
         "problems": [
             "Leetcode_Problems-Two_Sum",
             "Graph_Theory-Breadth_First_Search"

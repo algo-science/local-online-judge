@@ -131,6 +131,18 @@
         .modal-close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
         .modal-close:hover, .modal-close:focus { color: var(--text-main); text-decoration: none; cursor: pointer; }
         .modal-footer { margin-top: 20px; text-align: right; }
+
+        /* Calendar Styles */
+        .calendar-container { max-width: 600px; margin: auto; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; padding: 10px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .calendar-day { text-align: center; padding: 10px; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; }
+        .calendar-day:hover { background: var(--item-hover); }
+        .calendar-header-day { font-weight: bold; background-color: var(--item-bg); }
+        .calendar-day.today { background-color: var(--accent); color: white; }
+        .calendar-day.selected { border-color: var(--accent); background: var(--accent); color: white; }
+        .task-list li { list-style-type: none; padding: 5px 0; }
+        .task-list li.completed span { text-decoration: line-through; color: #999; }
     </style>
 </head>
 <body>
@@ -163,6 +175,7 @@
         <a onclick="importProblems()">Import Problems</a>
         <a onclick="navigate('contests')">Contests</a>
         <a onclick="navigate('quizzes')">Quizzes</a>
+        <a onclick="navigate('calendar')">Calendar</a>
         <i class="fas fa-moon theme-toggle" onclick="toggleTheme()" id="theme-icon" title="Toggle Dark Mode"></i>
     </div>
 </nav>
@@ -251,14 +264,12 @@
     }
 
     function navigate(view, params = {}) {
-        window.location.hash = view;
-        if (view === 'problems') renderProblemList();
-        else if (view === 'problem') renderProblem(params.id);
-        else if (view === 'add-problem') renderAddProblem();
-        else if (view === 'contests') renderContestList();
-        else if (view === 'contest') renderContest(params.id);
-        else if (view === 'create-contest') renderCreateContest();
-        else if (view === 'quizzes') renderQuizList();
+        let hash = view;
+        if (params && Object.keys(params).length > 0) {
+            const queryParams = new URLSearchParams(params).toString();
+            hash += `?${queryParams}`;
+        }
+        window.location.hash = hash;
     }
 
     async function renderProblemList(options = {}) {
@@ -702,13 +713,13 @@
                             <h3>Input Format</h3>
                             <pre>${problem.input_format || 'N/A'}</pre>
                             <h3>Sample Input</h3>
-                            <pre style="background:#eee; padding:10px;">${problem.sample_input || ''}</pre>
+                            <pre style="background:var(--item-bg); padding:10px; border: 1px solid var(--border); border-radius: 4px;">${problem.sample_input || ''}</pre>
                         </div>
                         <div style="flex: 1;">
                             <h3>Output Format</h3>
                             <pre>${problem.output_format || 'N/A'}</pre>
                             <h3>Sample Output</h3>
-                            <pre style="background:#eee; padding:10px;">${problem.sample_output || ''}</pre>
+                            <pre style="background:var(--item-bg); padding:10px; border: 1px solid var(--border); border-radius: 4px;">${problem.sample_output || ''}</pre>
                         </div>
                     </div>
                 </div>
@@ -752,7 +763,7 @@
 
             // Initialize CodeMirror
             // Initialize CodeMirror before setting the language
-            initEditor();
+            initEditor(id);
 
             // Set language from localStorage after editor is initialized
             const savedLang = localStorage.getItem('preferredLanguage');
@@ -822,26 +833,40 @@
 
     let editor;
 
-    function initEditor() {
+    function initEditor(problemId) {
         const textarea = document.getElementById('code');
-        const lang = document.getElementById('language').value;
-        let mode;
-        if (lang === 'cpp') {
-            mode = 'text/x-c++src';
-        } else if (lang === 'java') {
-            mode = 'text/x-java';
-        } else {
-            mode = 'python';
-        }
         
+        // If an old editor instance exists, remove it to prevent memory leaks
+        if (editor) {
+            editor.toTextArea();
+        }
+
         editor = CodeMirror.fromTextArea(textarea, {
             lineNumbers: true,
-            mode: mode,
-            theme: 'monokai'
+            theme: 'monokai',
+            // Mode will be set by changeLanguage
         });
+
+        // Restore saved code from localStorage
+        const savedCode = localStorage.getItem(`code-${problemId}`);
+        const savedLang = localStorage.getItem('preferredLanguage') || 'python';
+
+        document.getElementById('language').value = savedLang;
+
+        if (savedCode) {
+            editor.setValue(savedCode);
+        } else {
+            // If no saved code, set template based on language
+            changeLanguage(true);
+        }
         
-        // Set initial template
-        changeLanguage(true);
+        // Update the mode based on the (potentially restored) language
+        changeLanguage();
+
+        // Save code to localStorage on change
+        editor.on('change', () => {
+            localStorage.setItem(`code-${problemId}`, editor.getValue());
+        });
     }
 
     function changeLanguage(isInitial = false) {
@@ -880,7 +905,9 @@ public class Main {
 
         editor.setOption('mode', mode);
         
-        if (isInitial || editor.getValue().trim() === '') {
+        // Only set the template if the editor is empty.
+        // This prevents overwriting restored code.
+        if (editor.getValue().trim() === '') {
             editor.setValue(template);
         }
     }
@@ -968,9 +995,12 @@ public class Main {
                     <span style="color: #666; margin-left: 10px;">${passedInfo}</span>
                 </span>
                 <span style="color: #999; font-size: 0.9em;">${s.language} • ${new Date(s.timestamp).toLocaleString()}</span>
-                <button class="btn-sm" onclick="toggleEditorial(event, '${s.problem_id}', ${s.id})">
-                    ${s.is_editorial ? 'Remove from Editorials' : 'Add to Editorials'}
-                </button>
+                <div>
+                    <button class="btn-sm" onclick="event.stopPropagation(); getAiReview('${s.problem_id}', '${s.id}')">Get AI Review</button>
+                    <button class="btn-sm" onclick="toggleEditorial(event, '${s.problem_id}', ${s.id})">
+                        ${s.is_editorial ? 'Remove from Editorials' : 'Add to Editorials'}
+                    </button>
+                </div>
             </div>
             <div id="sub-details-${s.id}" class="submission-details" style="cursor: default;">
                 <div style="margin-top: 10px;">
@@ -1213,8 +1243,89 @@ public class Main {
         `;
     }
 
+    // --- CALENDAR LOGIC MOVED to calendar.js ---
+
+    // Initial load & Routing from URL Hash
+    function handleRouteChange() {
+        const hash = window.location.hash.substring(1);
+        const [view, paramStr] = hash.split('?');
+        const params = new URLSearchParams(paramStr || '');
+
+        if (view === 'problem' && params.has('id')) {
+            renderProblem(params.get('id'));
+        } else if (view === 'add-problem') {
+            renderAddProblem();
+        } else if (view === 'contests') {
+            renderContestList();
+        } else if (view === 'contest' && params.has('id')) {
+            renderContest(params.get('id'));
+        } else if (view === 'create-contest') {
+            renderCreateContest();
+        } else if (view === 'quizzes') {
+            renderQuizList();
+        } else if (view === 'calendar') {
+            renderCalendar();
+        } else {
+            renderProblemList();
+        }
+    }
+
+    window.addEventListener('hashchange', handleRouteChange);
+    
     // Initial load
-    navigate('problems');
+    handleRouteChange();
+
+    async function getAiReview(problemId, submissionId) {
+        let code = "";
+        if (submissionId) {
+             const detailsDiv = document.getElementById(`sub-details-${submissionId}`);
+             if (detailsDiv) {
+                 const codeBlock = detailsDiv.querySelector('code');
+                 if (codeBlock) code = codeBlock.textContent;
+             }
+        } else {
+            if(editor) code = editor.getValue();
+        }
+
+        const reviewContainer = document.getElementById('review-container') || document.createElement('div');
+        if (!document.getElementById('review-container')) {
+            reviewContainer.id = 'review-container';
+            reviewContainer.style.marginTop = '20px';
+            const submissionForm = document.querySelector('form[onsubmit^="submitCode"]');
+            if (submissionForm) {
+                submissionForm.insertAdjacentElement('afterend', reviewContainer);
+            } else {
+                app.appendChild(reviewContainer);
+            }
+        }
+
+        reviewContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        reviewContainer.style.display = 'block';
+        reviewContainer.innerHTML = '<h3>AI Code Review</h3><div class="description">Analyzing...</div>';
+
+        if (!code.trim()) {
+            reviewContainer.innerHTML = '<h3>AI Code Review</h3><div class="description"><p style="color:orange;">Could not find code to review.</p></div>';
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/review', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ problem_id: problemId, code: code })
+            });
+            const result = await res.json();
+            
+            if (result.error) {
+                reviewContainer.innerHTML = `<h3>AI Code Review</h3><div class="description"><p style="color:red;">${result.error}</p></div>`;
+            } else {
+                reviewContainer.innerHTML = `<h3>AI Code Review</h3><div class="description">${marked.parse(result.review)}</div>`;
+            }
+        } catch (e) {
+            reviewContainer.innerHTML = '<h3>AI Code Review</h3><div class="description"><p style="color:red;">Failed to get review due to a network error.</p></div>';
+        }
+    }
 </script>
+<script src="/static/calendar.js"></script>
 </body>
 </html>

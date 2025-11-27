@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify, render_template
 from core.executor import execute_code
 from core.file_handler import get_problems_from_fs, get_problem_from_fs, get_submissions_from_fs, save_submission_to_fs, get_quizzes_from_fs, read_sessions, write_sessions, read_tags, write_tags, read_favorites, write_favorites, read_ratings, write_ratings
+from core.ai_review import get_ai_review
 from utils.importer import import_problems
+from core import calendar_handler
 from flask import Flask, request, jsonify, render_template
 import time
 import os
@@ -239,6 +241,57 @@ def update_rating(problem_id):
     write_ratings(ratings)
     
     return jsonify({"success": True, "rating": rating})
+
+@app.route('/api/review', methods=['POST'])
+def review_code():
+    data = request.get_json()
+    code = data.get('code')
+    problem_id = data.get('problem_id')
+
+    if not code or not problem_id:
+        return jsonify({"error": "Code and problem ID are required"}), 400
+
+    problem = get_problem_from_fs(problem_id)
+    if not problem:
+        return jsonify({"error": "Problem not found"}), 404
+
+    # Simplified problem context for the AI
+    problem_context = f"Title: {problem['title']}\n\nDescription:\n{problem['description']}"
+
+    review_result = get_ai_review(code, problem_context)
+    return jsonify(review_result)
+
+# Calendar routes
+@app.route('/api/calendar/<date_str>', methods=['GET'])
+def get_calendar_tasks(date_str):
+    tasks = calendar_handler.get_tasks_for_date(date_str)
+    return jsonify(tasks)
+
+@app.route('/api/calendar/<date_str>', methods=['POST'])
+def add_calendar_task(date_str):
+    data = request.get_json()
+    description = data.get('description')
+    if not description:
+        return jsonify({"error": "Task description is required"}), 400
+    task = calendar_handler.add_task(date_str, description)
+    return jsonify(task), 201
+
+@app.route('/api/calendar/<date_str>/<int:task_id>', methods=['PUT'])
+def update_calendar_task(date_str, task_id):
+    data = request.get_json()
+    completed = data.get('completed')
+    if completed is None:
+        return jsonify({"error": "Completed status is required"}), 400
+    task = calendar_handler.update_task_status(date_str, task_id, bool(completed))
+    if task:
+        return jsonify(task)
+    return jsonify({"error": "Task not found"}), 404
+
+@app.route('/api/calendar/<date_str>/<int:task_id>', methods=['DELETE'])
+def delete_calendar_task(date_str, task_id):
+    if calendar_handler.delete_task(date_str, task_id):
+        return jsonify({"success": True})
+    return jsonify({"error": "Task not found"}), 404
 
 
 if __name__ == '__main__':
