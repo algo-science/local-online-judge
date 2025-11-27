@@ -8,6 +8,28 @@ The application is a single-page web application (SPA) with a Python Flask backe
 -   **Frontend:** The frontend is responsible for rendering the user interface and interacting with the backend through API calls.
 -   **Data Storage:** All data, including problems, submissions, and user information, is stored on the filesystem in JSON format.
 
+## Project Structure
+
+-   **`server/`**: Contains the Flask backend.
+    -   **`app.py`**: The main application file.
+    -   **`core/`**: Core application logic.
+    -   **`problems/`**: Contains problem statements and test cases.
+    -   **`static/`**: Static assets for the frontend.
+    -   **`templates/`**: HTML templates for the frontend.
+-   **`client/`**: Contains the frontend source code (if applicable).
+-   **`docker-compose.yml`**: Defines the Docker services.
+-   **`Dockerfile`**: Defines the Docker image for the application.
+
+## Running with Docker
+
+To run the application with Docker, use the following command:
+
+```bash
+docker compose up -d --build
+```
+
+The application will be available at `http://localhost:5002`.
+
 ## API Endpoint Documentation
 
 All API endpoints are prefixed with `/api`.
