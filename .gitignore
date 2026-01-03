@@ -8,3 +8,6 @@ __pycache__/
 # VSCode
 .vscode/
 .env
+*.log
+*_log.txt
+server/submissions/

@@ -4,6 +4,7 @@ from core.file_handler import get_problems_from_fs, get_problem_from_fs, get_sub
 from core.ai_review import get_ai_review
 from utils.importer import import_problems
 from core import calendar_handler
+from core.generator import generate_test_cases
 from flask import Flask, request, jsonify, render_template
 import time
 import os
@@ -45,6 +46,7 @@ def submit_code():
     problem_id = data.get('problem_id')
     language = data.get('language')
     code = data.get('code')
+    mode = data.get('mode', 'submit') # 'run' or 'submit'
 
     problem = get_problem_from_fs(problem_id)
     if not problem:
@@ -61,6 +63,12 @@ def submit_code():
     import re
     inputs = [i.strip() for i in re.split(r'---\s*', input_text.strip()) if i.strip()]
     outputs = [o.strip() for o in re.split(r'---\s*', output_text.strip()) if o.strip()]
+    
+    if mode == 'run':
+        # Run mode only executes the first test case (Sample)
+        inputs = inputs[:1]
+        outputs = outputs[:1]
+        
     test_cases = [{"input": i, "output": o} for i, o in zip(inputs, outputs)]
 
 
@@ -367,5 +375,23 @@ def delete_calendar_task(date_str, task_id):
     return jsonify({"error": "Task not found"}), 404
 
 
+@app.route('/api/problems/<problem_id>/generate', methods=['POST'])
+def generate_tests(problem_id):
+    """
+    Generates test cases for a specific problem.
+    Args:
+        problem_id: The ID of the problem.
+    """
+    data = request.get_json() or {}
+    count = data.get('count', 10)
+    
+    result = generate_test_cases(problem_id, count)
+    
+    if result.get("success"):
+         return jsonify(result)
+    else:
+         return jsonify(result), 400
+
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5002)
+    app.run(debug=False, host='0.0.0.0', port=5002)

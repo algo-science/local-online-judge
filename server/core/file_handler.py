@@ -91,23 +91,17 @@ def get_problems_from_fs():
                     })
 
     grouped_problems = {}
-    for session in sessions:
-        session_name = session['name']
-        grouped_problems[session_name] = []
-        for problem_id in session['problems']:
-            problem = next((p for p in all_problems if p['id'] == problem_id), None)
-            if problem:
-                grouped_problems[session_name].append(problem)
-    
-    # Add uncategorized problems
-    uncategorized_problems = []
-    categorized_ids = {pid for s in sessions for pid in s['problems']}
+    # Group by filesystem folder (Group Name)
     for problem in all_problems:
-        if problem['id'] not in categorized_ids:
-            uncategorized_problems.append(problem)
+        group_name = problem['id'].split('-', 1)[0]
+        if group_name not in grouped_problems:
+            grouped_problems[group_name] = []
+        grouped_problems[group_name].append(problem)
     
-    if uncategorized_problems:
-        grouped_problems['Uncategorized'] = uncategorized_problems
+    # We can still include specific sessions if needed, but for now 
+    # the main view should be the directory structure.
+    # If we want to support sessions mixed in, we would add them here.
+
     
     # Attach documentation content to groups if available
     grouped_problems_with_docs = {}

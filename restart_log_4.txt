@@ -1,0 +1,66 @@
+🚀 Starting Local Online Judge...
+⚠️  Port 5002 is busy. Killing existing process...
+🟢 Server starting on http://localhost:5002
+/Users/navneethingankar/Desktop/local-online-judge/server/core/ai_review.py:2: FutureWarning: 
+
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+See README for more details:
+
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+
+  import google.generativeai as genai
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5002
+ * Running on http://192.168.0.124:5002
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [03/Jan/2026 23:11:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:11:48] "GET /api/problems HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:12:16] "GET /api/problems/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:12:16] "GET /api/submissions/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:12:23] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:12:23] "GET /api/problems HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:12:55] "GET /api/problems/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:12:55] "GET /api/submissions/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:13:04] "GET /api/problems/Algorithms__Recursion__Contribution_Technique-3786_Interaction_Cost_Groups HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:13:04] "GET /api/submissions/Algorithms__Recursion__Contribution_Technique-3786_Interaction_Cost_Groups HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:13:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:13:40] "GET /api/problems HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:14:18] "GET /api/problems/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:14:18] "GET /api/submissions/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:14:27] "GET /api/problems HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:14:38] "[33mGET /api/problem/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1[0m" 404 -
+127.0.0.1 - - [03/Jan/2026 23:14:47] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:14:47] "GET /api/problems HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:15:28] "GET /api/problems/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:15:28] "GET /api/submissions/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:15:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:15:53] "GET /api/problems HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:15:53] "GET /api/problems/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:15:53] "GET /api/submissions/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:17:28] "[33mGET /api/problem/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree/editorial HTTP/1.1[0m" 404 -
+127.0.0.1 - - [03/Jan/2026 23:17:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:17:41] "GET /api/problems HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:18:28] "GET /api/problems/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:18:28] "GET /api/submissions/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:18:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:18:43] "GET /api/problems HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:18:43] "GET /api/problems/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:18:43] "GET /api/submissions/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:18:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:18:56] "GET /api/problems HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:18:56] "GET /api/problems/Algorithms__Recursion__Contribution_Technique-3786_Interaction_Cost_Groups HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:18:56] "GET /api/submissions/Algorithms__Recursion__Contribution_Technique-3786_Interaction_Cost_Groups HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:19:09] "GET /?cb=123 HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:19:09] "GET /api/problems HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:19:57] "GET /api/problems/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:19:57] "GET /api/submissions/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:20:28] "GET /api/problems/Algorithms__Recursion__Contribution_Technique-3786_Interaction_Cost_Groups HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:20:28] "GET /api/submissions/Algorithms__Recursion__Contribution_Technique-3786_Interaction_Cost_Groups HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:21:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:21:30] "GET /api/problems/Algorithms__Recursion__Contribution_Technique-834_Sum_of_Distances_in_Tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:21:46] "GET /api/problems/Algorithms__Recursion__Contribution_Technique-3786_Interaction_Cost_Groups HTTP/1.1" 200 -
+127.0.0.1 - - [03/Jan/2026 23:22:30] "GET /api/problems HTTP/1.1" 200 -
