@@ -1,6 +1,7 @@
 import os
 import uuid
 import sys
+import re
 import subprocess
 
 TEMP_DIR = "temp"
@@ -43,13 +44,18 @@ def execute_code(language, code, input_data):
         # Let's just use a unique folder for java.
         java_dir = os.path.join(TEMP_DIR, unique_id)
         os.makedirs(java_dir)
-        filename = os.path.join(java_dir, "Main.java")
+        
+        # Detect public class name
+        match = re.search(r'public\s+class\s+(\w+)', code)
+        class_name = match.group(1) if match else "Main"
+        
+        filename = os.path.join(java_dir, f"{class_name}.java")
         
         with open(filename, "w") as f:
             f.write(code)
         
         compile_cmd = ["javac", filename]
-        run_cmd = ["java", "-cp", java_dir, "Main"]
+        run_cmd = ["java", "-cp", java_dir, class_name]
 
     else:
         return {"status": "Error", "output": "Unsupported language"}

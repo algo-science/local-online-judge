@@ -1,0 +1,20 @@
+{
+    "title": "Aggregating Truncated Election Results",
+    "description": "Determine the definitive winner of an election given truncated results from multiple districts.",
+    "input_format": "Integer K (number of districts) and N (Top N truncation).\nThen K blocks, each starting with M (number of candidates reported).\nFollowed by M lines of `Name Votes`.",
+    "output_format": "The name of the definitive winner, or `Impossible`. Candidates are case-sensitive strings.",
+    "constraints": "1 <= K <= 100\n1 <= N <= 1000\nNames are alphanumeric strings.",
+    "sample_input": "2 5\n5\naa 10\nbb 9\ncc 9\ndd 8\njj 3\n5\nmm 11\nnn 9\noo 8\njj 7\ndd 4",
+    "sample_output": "Impossible",
+    "test_cases": [
+        {
+            "input": "2 5\n5\naa 10\nbb 9\ncc 9\ndd 8\njj 3\n5\nmm 11\nnn 9\noo 8\njj 7\ndd 4",
+            "output": "Impossible"
+        },
+        {
+            "input": "2 5\n5\nAlice 100\nBob 10\nCharlie 5\nDave 5\nEve 2\n5\nAlice 80\nFrank 8\nGeorge 8\nHarry 7\nIvy 5",
+            "output": "Alice"
+        }
+    ],
+    "editorial": "Calculate Min and Max scores for all candidates. `MinScore` is sum of observed votes. `MaxScore` is `MinScore` + sum of thresholds of districts where candidate is not observed. The threshold for a district is the vote count of the last visible candidate (or 0 if list size < N). To win, a candidate's `MinScore` must be strictly greater than every other candidate's `MaxScore`, including a hypothetical outsider whose MaxScore is the sum of all thresholds."
+}

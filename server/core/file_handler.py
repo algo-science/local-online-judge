@@ -137,6 +137,34 @@ def get_problem_from_fs(problem_id):
         if not os.path.isdir(problem_path):
             return None
 
+        # Check for info.json (New Format)
+        info_path = os.path.join(problem_path, 'info.json')
+        if os.path.exists(info_path):
+            try:
+                with open(info_path, 'r') as f:
+                    problem_data = json.load(f)
+                
+                # Check for separate statement.md
+                statement_file = os.path.join(problem_path, 'statement.md')
+                if os.path.exists(statement_file):
+                    with open(statement_file, 'r') as f:
+                         problem_data['description'] = f.read()
+                
+                problem_data['id'] = problem_id
+                problem_data["is_favorite"] = problem_id in read_favorites()
+                problem_data["rating"] = read_ratings().get(problem_id, 0)
+                
+                # Ensure samples are present for frontend
+                if 'sample_input' not in problem_data and 'test_cases' in problem_data and problem_data['test_cases']:
+                     problem_data['sample_input'] = problem_data['test_cases'][0].get('input', '')
+                     problem_data['sample_output'] = problem_data['test_cases'][0].get('output', '')
+
+                return problem_data
+            except Exception as e:
+                print(f"Error reading info.json for {problem_id}: {e}")
+                # Fallthrough or return None? Let's fallthrough to legacy in case it's mixed, or just return None.
+                pass
+
         statement_file = os.path.join(problem_path, 'statement.md')
         input_file = os.path.join(problem_path, 'input.txt')
         output_file = os.path.join(problem_path, 'output.txt')

@@ -52,24 +52,33 @@ def submit_code():
     if not problem:
         return jsonify({"error": "Problem not found"}), 404
 
-    # This is a simplified way to get test cases. In a real scenario, this might be stored more securely.
-    group_folder, problem_folder = problem_id.split('-', 1)
-    problem_path = os.path.join(os.path.dirname(__file__), 'problems', group_folder, problem_folder)
-    with open(os.path.join(problem_path, 'input.txt'), 'r') as f:
-        input_text = f.read()
-    with open(os.path.join(problem_path, 'output.txt'), 'r') as f:
-        output_text = f.read()
+    test_cases = []
     
-    import re
-    inputs = [i.strip() for i in re.split(r'---\s*', input_text.strip()) if i.strip()]
-    outputs = [o.strip() for o in re.split(r'---\s*', output_text.strip()) if o.strip()]
-    
+    # Check if problem has test cases (from info.json)
+    if 'test_cases' in problem and problem['test_cases']:
+        test_cases = problem['test_cases']
+    else:
+        # Fallback to legacy file reading
+        group_folder, problem_folder = problem_id.split('-', 1)
+        problem_path = os.path.join(os.path.dirname(__file__), 'problems', group_folder, problem_folder)
+        
+        try:
+            with open(os.path.join(problem_path, 'input.txt'), 'r') as f:
+                input_text = f.read()
+            with open(os.path.join(problem_path, 'output.txt'), 'r') as f:
+                output_text = f.read()
+            
+            import re
+            inputs = [i.strip() for i in re.split(r'---\s*', input_text.strip()) if i.strip()]
+            outputs = [o.strip() for o in re.split(r'---\s*', output_text.strip()) if o.strip()]
+            test_cases = [{"input": i, "output": o} for i, o in zip(inputs, outputs)]
+        except FileNotFoundError:
+             # Just in case
+             pass
+
     if mode == 'run':
         # Run mode only executes the first test case (Sample)
-        inputs = inputs[:1]
-        outputs = outputs[:1]
-        
-    test_cases = [{"input": i, "output": o} for i, o in zip(inputs, outputs)]
+        test_cases = test_cases[:1]
 
 
     final_status = "Accepted"
@@ -317,7 +326,10 @@ def review_code():
     # Simplified problem context for the AI
     problem_context = f"Title: {problem['title']}\n\nDescription:\n{problem['description']}"
 
-    review_result = get_ai_review(code, problem_context)
+    history = data.get('history') # List of {role, parts}
+    message = data.get('message') # New user message string
+
+    review_result = get_ai_review(code, problem_context, chat_history=history, user_message=message)
     return jsonify(review_result)
 
 # Calendar routes

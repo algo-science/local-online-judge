@@ -1104,10 +1104,22 @@
             const body = document.getElementById('modal-body');
             const confirmBtn = document.getElementById('modal-confirm-btn');
 
-            title.innerText = "AI Code Review";
-            body.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Analyzing your code...</p></div>';
+            title.innerText = "AI Code Review Chat";
+            body.innerHTML = `
+                <div id="chat-history" style="height:300px; overflow-y:auto; padding:10px; border:1px solid #ddd; margin-bottom:10px; background:#f9f9f9; display:flex; flex-direction:column; gap:10px;">
+                    <div style="text-align:center; color:#888;">
+                        <i class="fas fa-spinner fa-spin"></i> Initializing review...
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="chat-input" placeholder="Ask a follow-up question..." style="flex:1; padding:10px; border:1px solid #ddd; border-radius:4px;" onkeypress="if(event.key === 'Enter') sendChat()">
+                    <button onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            `;
             modal.style.display = 'block';
             confirmBtn.style.display = 'none';
+
+            aiChatHistory = []; // Reset history
 
             try {
                 const res = await fetch('/api/review', {
@@ -1117,15 +1129,134 @@
                 });
                 const data = await res.json();
 
+                const historyDiv = document.getElementById('chat-history');
+                historyDiv.innerHTML = ''; // Clear spinner
+
                 if (data.error) {
-                    body.innerHTML = `<p style="color:red">Error: ${data.error}</p>`;
+                    historyDiv.innerHTML = `<p style="color:red">Error: ${data.error}</p>`;
                 } else {
-                    body.innerHTML = `<div style="max-height:400px; overflow-y:auto; padding:10px;">${marked.parse(data.review)}</div>`;
+                    addChatMessage('model', data.review);
                 }
             } catch (e) {
-                body.innerHTML = `<p style="color:red">Error: ${e.message}</p>`;
+                const historyDiv = document.getElementById('chat-history');
+                historyDiv.innerHTML = `<p style="color:red">Error: ${e.message}</p>`;
             }
-            // Add close button logic handled by existing close modal
+        }
+
+        let aiChatHistory = [];
+
+        async function sendChat() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addChatMessage('user', message);
+            input.value = '';
+
+            // Show loading in history?
+            const historyDiv = document.getElementById('chat-history');
+            const loadingId = 'loading-' + Date.now();
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = loadingId;
+            loadingDiv.className = 'chat-message model';
+            loadingDiv.style.alignSelf = 'flex-start';
+            loadingDiv.style.background = '#e1f5fe';
+            loadingDiv.style.padding = '8px 12px';
+            loadingDiv.style.borderRadius = '10px';
+            loadingDiv.style.maxWidth = '80%';
+            loadingDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+            historyDiv.appendChild(loadingDiv);
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+
+            const code = editorInstance.getValue();
+            const id = getProblemId();
+
+            try {
+                const res = await fetch('/api/review', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        code: code,
+                        problem_id: id,
+                        history: aiChatHistory,
+                        message: message
+                    })
+                });
+                const data = await res.json();
+
+                // Remove loading
+                const loader = document.getElementById(loadingId);
+                if (loader) loader.remove();
+
+                if (data.error) {
+                    addChatMessage('model', "Error: " + data.error);
+                } else {
+                    addChatMessage('model', data.review);
+                }
+
+            } catch (e) {
+                const loader = document.getElementById(loadingId);
+                if (loader) loader.remove();
+                addChatMessage('model', "Error: " + e.message);
+            }
+        }
+
+        function addChatMessage(role, text) {
+            const historyDiv = document.getElementById('chat-history');
+            const div = document.createElement('div');
+
+            // Push to history for next context
+            // Note: We don't push the one we just received until confirmed valid? 
+            // Actually, for history array we should push pure text.
+            // But wait, if we push 'model' response here, we are good.
+            // CAUTION: The 'history' for API excludes the CURRENT user message usually, 
+            // but we need to track it for the NEXT turn.
+
+            // So: 
+            // 1. User sends message -> Add to UI. 
+            // 2. Call API (history excludes current msg? No, usually API stateless needs full context or just prev history + new msg).
+            // My backend logic: takes `history` (previous) + `message` (new).
+            // So we should update `aiChatHistory` AFTER sending? 
+            // Actually, if we add User msg to `aiChatHistory` before sending, the backend might double it if logic assumes history IS previous.
+
+            // Let's stick to: Backend takes (history list) + (current message).
+            // So we add User message to `aiChatHistory` AFTER successful send? 
+            // No, the Backend rebuilds state. 
+            // If I send `history`=[A, B] and `message`=C. Backend does start_chat([A, B]) then send(C).
+            // Result is [A, B, C, D].
+            // So NEXT time, we need [A, B, C, D] in history.
+
+            // So: Add to UI -> Add to `aiChatHistory`? 
+            // Wait, "addChatMessage" is for UI. Logic for history storage should be careful.
+
+            // Correct flow:
+            // User msg -> UI.
+            // Call API (passing current `aiChatHistory` + `message`).
+            // Push User msg to `aiChatHistory`.
+            // Receive Model response -> UI.
+            // Push Model response to `aiChatHistory`.
+
+            // Wait, this function `addChatMessage` is called for both.
+
+            // Implementation:
+            aiChatHistory.push({ role: role, parts: [text] });
+
+            div.style.alignSelf = role === 'user' ? 'flex-end' : 'flex-start';
+            div.style.background = role === 'user' ? '#dcf8c6' : '#e1f5fe';
+            div.style.padding = '8px 12px';
+            div.style.borderRadius = '10px';
+            div.style.maxWidth = '80%';
+            div.style.wordWrap = 'break-word';
+
+            // Render markdown for model
+            div.innerHTML = role === 'model' ? marked.parse(text) : text;
+
+            historyDiv.appendChild(div);
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+
+            if (role === 'model' && window.Prism) {
+                Prism.highlightAllUnder(div);
+            }
         }
 
         // --- Editor & Submission ---
