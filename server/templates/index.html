@@ -641,7 +641,7 @@
 
         function renderPlayground() {
             app.innerHTML = `
-                < div class= "container animated fadeIn" >
+                <div class="container animated fadeIn">
                    <div class="problem-header">
                         <h1 style="margin:0;">Playground</h1>
                         <span style="color:var(--text-secondary); font-size:0.9rem;">Scratchpad for testing code</span>
@@ -663,7 +663,7 @@
                         <textarea id="code-area"></textarea>
                     </div>
                     <div id="result-area" style="margin-top:20px;"></div>
-                </div >
+                </div>
                     `;
             // Initialize editor for 'playground' ID
             // We trick existing logical helpers by expecting 'problem?id=playground' sort of context,
@@ -676,7 +676,7 @@
 
         function renderImport() {
             app.innerHTML = `
-                    < div class="container animated fadeIn" style = "max-width: 600px;" >
+                    <div class="container animated fadeIn" style="max-width: 600px;">
                     <h1>Create New Problem</h1>
                     <div style="background:var(--bg-container); padding:20px; border:1px solid var(--border); border-radius:8px;">
                         
@@ -717,7 +717,7 @@
                          <button class="secondary" onclick="submitBulkImport()" style="width:100%; padding:10px;">Import ZIP</button>
                          <div id="bulk-msg" style="margin-top:10px; text-align:center;"></div>
                     </div>
-                </div >
+                </div>
                     `;
         }
 
@@ -749,10 +749,10 @@
                         window.location.reload();
                     }, 1000);
                 } else {
-                    msg.innerHTML = `< span style = "color:red" > Error: ${data.error}</span > `;
+                    msg.innerHTML = `<span style="color:red">Error: ${data.error}</span>`;
                 }
             } catch (e) {
-                msg.innerHTML = `< span style = "color:red" > Error: ${e.message}</span > `;
+                msg.innerHTML = `<span style="color:red">Error: ${e.message}</span>`;
             }
         }
 
@@ -778,15 +778,15 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    msg.innerHTML = `< span style = "color:green" > Imported into < b > ${data.group}</b > successfully! Reloading...</span > `;
+                    msg.innerHTML = `<span style="color:green">Imported into <b>${data.group}</b> successfully! Reloading...</span>`;
                     setTimeout(() => {
                         window.location.reload();
                     }, 2000);
                 } else {
-                    msg.innerHTML = `< span style = "color:red" > Error: ${data.error}</span > `;
+                    msg.innerHTML = `<span style="color:red">Error: ${data.error}</span>`;
                 }
             } catch (e) {
-                msg.innerHTML = `< span style = "color:red" > Error: ${e.message}</span > `;
+                msg.innerHTML = `<span style="color:red">Error: ${e.message}</span>`;
             }
         }
 
@@ -1007,7 +1007,7 @@
                     </div>
 
                     <div id="desc" class="tab-content active">
-                        <div class="description">${marked.parse(problem.description)}</div>
+                        <div class="description">${marked.parse(problem.description || '')}</div>
                         
                          <h3 style="margin-top:30px;">Editor</h3>
                          <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
@@ -1041,14 +1041,14 @@
                     <div id="subs" class="tab-content">
                         ${subHtml || '<p>No submissions yet.</p>'}
                     </div>
-                </div >
+                </div>
                     `;
 
                 initEditor();
                 if (window.MathJax) MathJax.typesetPromise();
 
             } catch (e) {
-                app.innerHTML = `< p style = "color:red" > Error loading problem: ${e.message}</p > `;
+                app.innerHTML = `<p style="color:red">Error loading problem: ${e.message}</p>`;
             }
         }
 
@@ -1128,7 +1128,7 @@
         const languageTemplates = {
             'python': "import sys\n\ndef solve():\n    # Write your solution here\n    pass\n\nif __name__ == '__main__':\n    solve()",
             'cpp': "#include <iostream>\n#include <vector>\n#include <algorithm>\n\nusing namespace std;\n\nvoid solve() {\n    // Write your solution here\n}\n\nint main() {\n    ios_base::sync_with_stdio(false);\n    cin.tie(NULL);\n    solve();\n    return 0;\n}",
-            'java': "import java.util.*;\nimport java.io.*;\n\npublic class Solution {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        solve(scanner);\n    }\n\n    public static void solve(Scanner scanner) {\n        // Write your solution here\n    }\n}"
+            'java': "import java.util.*;\nimport java.io.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        solve(scanner);\n    }\n\n    public static void solve(Scanner scanner) {\n        // Write your solution here\n    }\n}"
         };
 
         const mimeTypes = {
@@ -1178,19 +1178,20 @@
             const id = getProblemId();
             if (!id) return;
 
-            const saved = localStorage.getItem(`code_${id} `);
             const savedLang = localStorage.getItem(`lang_${id} `);
+            let lang = 'python';
 
             if (savedLang) {
                 document.getElementById('lang-select').value = savedLang;
                 setEditorMode(savedLang);
+                lang = savedLang;
             }
 
-            if (saved) {
-                editorInstance.setValue(saved);
+            const savedCode = localStorage.getItem(`code_${id}_${lang} `);
+            if (savedCode) {
+                editorInstance.setValue(savedCode);
             } else {
-                // Default to Python template
-                editorInstance.setValue(languageTemplates['python']);
+                editorInstance.setValue(languageTemplates[lang]);
             }
         }
 
@@ -1199,7 +1200,7 @@
             if (!id) return;
             const code = editorInstance.getValue();
             const lang = document.getElementById('lang-select').value;
-            localStorage.setItem(`code_${id} `, code);
+            localStorage.setItem(`code_${id}_${lang} `, code);
             localStorage.setItem(`lang_${id} `, lang);
         }
 
@@ -1210,23 +1211,31 @@
         }
 
         function changeLanguage() {
-            const lang = document.getElementById('lang-select').value;
-            setEditorMode(lang);
-            // Load template for new language
-            // Only if user agrees to overwrite? Or maybe just switch?
-            // Standard behavior: Switch template if empty or just switch syntax highlighting?
-            // Let's prompt or just switch template for now, simpler for MVP.
-            // Better: Check if code is default template of previous lang, if so replace.
-            // For now, FORCE replace with template to ensure correctness as requested "pre-fill correct boilerplate".
-            const confirmReset = confirm("Switching language will reset your current code. Continue?");
-            if (confirmReset) {
-                editorInstance.setValue(languageTemplates[lang]);
-                saveCode();
+            const newLang = document.getElementById('lang-select').value;
+
+            // 1. Identify old language (difficult without tracking, but we can assume prior state)
+            // Actually, we should save BEFORE the value changes, but onchange happens after.
+            // Better strategy: We can't save the OLD language code here easily because the select value is already NEW.
+            // BUT, we can just load the NEW language code. The 'change' event on editor handles saving continuously.
+            // So the previous language's code is ALREADY saved in its specific slot if we used saveCode correctly.
+            // Wait, saveCode uses current select value. If select value changed, saveCode would save to NEW slot.
+            // We need to be careful. CodeMirror 'change' fires on setValue too.
+
+            // To be safe: loadCode() handles retrieving the correct code for the *current* select value.
+            // So we just update mode, save preference, and call loadCode() to refresh content.
+
+            setEditorMode(newLang);
+            const id = getProblemId();
+            if (id) {
+                localStorage.setItem(`lang_${id} `, newLang);
+            }
+
+            // Load code for the new language (will get saved or template)
+            const savedCode = localStorage.getItem(`code_${id}_${newLang} `);
+            if (savedCode) {
+                editorInstance.setValue(savedCode);
             } else {
-                // Revert select
-                const id = getProblemId();
-                const savedLang = localStorage.getItem(`lang_${id} `) || 'python';
-                document.getElementById('lang-select').value = savedLang;
+                editorInstance.setValue(languageTemplates[newLang]);
             }
         }
 
@@ -1273,20 +1282,20 @@
                 if (data.status === 'Accepted' || data.status === 'Success') {
                     const color = 'green';
                     html = `
-                    < div style = "background:#E8F5E9; padding:15px; border-radius:5px; border-left:5px solid ${color};" >
+                    <div style="background:#E8F5E9; padding:15px; border-radius:5px; border-left:5px solid ${color};">
                         <h3 style="color:${color}; margin-top:0;">${mode === 'run' ? 'Run Successful' : 'Accepted'}</h3>
                         <p>Passed: ${data.passed_count} / ${data.total_count}</p>
                         ${data.output ? `<pre style="background:rgba(0,0,0,0.05); padding:10px;">Output: ${data.output}</pre>` : ''}
-                    </div > `;
+                    </div>`;
                 } else {
                     const color = 'red';
                     html = `
-                    < div style = "background:#FFEBEE; padding:15px; border-radius:5px; border-left:5px solid ${color};" >
+                    <div style="background:#FFEBEE; padding:15px; border-radius:5px; border-left:5px solid ${color};">
                         <h3 style="color:${color}; margin-top:0;">${data.status}</h3>
                         <p>Passed: ${data.passed_count} / ${data.total_count}</p>
                         ${data.output ? `<pre style="background:rgba(0,0,0,0.05); padding:10px;">Error/Output: ${data.output}</pre>` : ''}
                         ${data.details ? renderDetails(data.details) : ''}
-                    </div > `;
+                    </div>`;
                 }
                 resDiv.innerHTML = html;
 
@@ -1297,7 +1306,7 @@
 
         function renderDetails(details) {
             return details.map(d => `
-                    < div style = "margin-top:10px; font-size:0.9rem; border-top:1px solid #ddd; padding-top:5px;" >
+                    <div style="margin-top:10px; font-size:0.9rem; border-top:1px solid #ddd; padding-top:5px;">
                     <strong>Test Case ${d.id}:</strong> <span style="color:${d.status === 'Passed' ? 'green' : 'red'}">${d.status}</span><br>
                     Input: <code>${d.input}</code><br>
                     Expected: <code>${d.expected}</code><br>
