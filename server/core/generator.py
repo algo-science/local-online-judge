@@ -1,6 +1,7 @@
 import os
 import subprocess
 import shutil
+import sys
 
 def generate_test_cases(problem_id, count=10):
     """
@@ -40,7 +41,7 @@ def generate_test_cases(problem_id, count=10):
         for i in range(count):
             # 1. Run generator.py to specific input
             gen_process = subprocess.run(
-                ['python3', generator_script],
+                [sys.executable, generator_script],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -50,7 +51,7 @@ def generate_test_cases(problem_id, count=10):
             
             # 2. Run solution.py with that input to get expected output
             sol_process = subprocess.run(
-                ['python3', solution_script],
+                [sys.executable, solution_script],
                 input=input_data,
                 capture_output=True,
                 text=True,

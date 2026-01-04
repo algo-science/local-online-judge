@@ -1,6 +1,6 @@
-import subprocess
 import os
 import uuid
+import sys
 
 TEMP_DIR = "temp"
 if not os.path.exists(TEMP_DIR):
@@ -42,7 +42,7 @@ def execute_code(language, code, input_data):
         filename = os.path.join(TEMP_DIR, f"{unique_id}.py")
         with open(filename, "w") as f:
             f.write(code)
-        run_cmd = ["python3", filename]
+        run_cmd = [sys.executable, filename]
     
     elif language == "java":
         # Java requires class name to match filename. 
