@@ -1,6 +1,10 @@
 import os
 import json
 import re
+import shutil
+import zipfile
+import time
+from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROBLEMS_DIR = os.path.join(BASE_DIR, "problems")
@@ -198,3 +202,99 @@ def get_quizzes_from_fs():
 def get_categories_from_fs():
     # This function is now managed directly in app.py for simplicity
     return []
+
+def create_problem_on_fs(data):
+    """
+    Creates a new problem structure on the filesystem.
+    data format:
+    {
+        "title": "Problem Title",
+        "category": "Algorithm/Graph", # "/" denotes subfolders
+        "description": "Markdown content...",
+        "input": "Sample Input",
+        "output": "Sample Output"
+    }
+    """
+    try:
+        title = data.get('title')
+        category = data.get('category', 'Uncategorized')
+        description = data.get('description', '')
+        sample_input = data.get('input', '')
+        sample_output = data.get('output', '')
+
+        # Sanitize folder names
+        safe_title = re.sub(r'[^\w\-]', '_', title)
+        # Handle complex category "Group/SubGroup" -> "Group__SubGroup"
+        # The frontend/user might pass "Group/SubGroup" or "Group__SubGroup"
+        # We want to map it to a folder structure. 
+        # But wait, our current structure is "Group__SubGroup" as a single folder name OR nested folders?
+        # Looking at existing: "Algorithms__Recursion__Contribution_Technique" is ONE folder name.
+        # So we should probably keep that convention for simplicity: replace "/" with "__"
+        safe_category = category.replace('/', '__').replace(' ', '_')
+        
+        # Create directory
+        problem_dir = os.path.join(PROBLEMS_DIR, safe_category, safe_title)
+        os.makedirs(problem_dir, exist_ok=True)
+
+        # Write statement.md
+        with open(os.path.join(problem_dir, 'statement.md'), 'w') as f:
+            f.write(description)
+        
+        # Write input.txt / output.txt
+        with open(os.path.join(problem_dir, 'input.txt'), 'w') as f:
+            f.write(sample_input)
+        
+        with open(os.path.join(problem_dir, 'output.txt'), 'w') as f:
+            f.write(sample_output)
+            
+        # Write template solution.py and generator.py
+        with open(os.path.join(problem_dir, 'solution.py'), 'w') as f:
+            f.write("# Write your solution here\n")
+            
+        with open(os.path.join(problem_dir, 'generator.py'), 'w') as f:
+            f.write("# Write your test case generator here\nimport random\nprint(random.randint(1, 10))\n")
+
+        return {"success": True, "id": f"{safe_category}-{safe_title}"}
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+def export_group_as_zip(group_name):
+    """
+    Zips a problem group folder and returns the path to the zip file.
+    """
+    group_path = os.path.join(PROBLEMS_DIR, group_name)
+    if not os.path.exists(group_path):
+        return None
+    
+    # Create temp zip file
+    temp_zip = os.path.join("temp", f"{group_name}.zip")
+    with zipfile.ZipFile(temp_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(group_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                # Archive name should be relative to group_path
+                arcname = os.path.relpath(file_path, os.path.dirname(group_path))
+                zipf.write(file_path, arcname)
+    
+    return temp_zip
+
+def import_bulk_zip(zip_path):
+    """
+    Extracts a zip file and imports problems.
+    Problems are placed in 'Imported_{Timestamp}' folder.
+    """
+    try:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        import_folder_name = f"Imported_{timestamp}"
+        target_dir = os.path.join(PROBLEMS_DIR, import_folder_name)
+        os.makedirs(target_dir, exist_ok=True)
+
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(target_dir)
+            
+        # Optional: Flatten if the zip contained a single top-level folder
+        # But for now, let's assume the zip structure mirrors the group structure
+        return {"success": True, "group": import_folder_name}
+    except Exception as e:
+        return {"success": False, "error": str(e)}

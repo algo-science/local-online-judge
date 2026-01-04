@@ -6,5 +6,12 @@
             "completed": false
         }
     ],
-    "2025-11-28": []
+    "2025-11-28": [],
+    "2026-01-04": [
+        {
+            "id": 1767493554920,
+            "description": "Test Task",
+            "completed": false
+        }
+    ]
 }

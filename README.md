@@ -41,16 +41,24 @@ A lightweight, local competitive programming judge and problem manager.
 ### 🪟 Windows
 
 1.  **Setup**:
-    Double-click `setup.bat` or run in Command Prompt:
+    Double-click `setup.bat` or run in Command Prompt/PowerShell:
     ```cmd
+    :: Command Prompt
     setup.bat
+
+    :: PowerShell
+    .\setup.bat
     ```
     *This checks for Python/g++, creates a virtual environment, and installs dependencies.*
 
 2.  **Run**:
-    Double-click `run.bat` or run in Command Prompt:
+    Double-click `run.bat` or run in Command Prompt/PowerShell:
     ```cmd
+    :: Command Prompt
     run.bat
+
+    :: PowerShell
+    .\run.bat
     ```
     Open [http://localhost:5002](http://localhost:5002) in your browser.
 

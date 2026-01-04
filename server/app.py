@@ -1,6 +1,6 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_file
 from core.executor import execute_code
-from core.file_handler import get_problems_from_fs, get_problem_from_fs, get_submissions_from_fs, save_submission_to_fs, get_quizzes_from_fs, read_sessions, write_sessions, read_tags, write_tags, read_favorites, write_favorites, read_ratings, write_ratings
+from core.file_handler import get_problems_from_fs, get_problem_from_fs, get_submissions_from_fs, save_submission_to_fs, get_quizzes_from_fs, read_sessions, write_sessions, read_tags, write_tags, read_favorites, write_favorites, read_ratings, write_ratings, create_problem_on_fs, export_group_as_zip, import_bulk_zip
 from core.ai_review import get_ai_review
 from utils.importer import import_problems
 from core import calendar_handler
@@ -391,6 +391,50 @@ def generate_tests(problem_id):
          return jsonify(result)
     else:
          return jsonify(result), 400
+
+@app.route('/api/problems/create', methods=['POST'])
+def create_problem():
+    """API Endpoint to create a new problem."""
+    data = request.get_json()
+    if not data or not data.get('title'):
+         return jsonify({"error": "Title is required"}), 400
+    
+    result = create_problem_on_fs(data)
+    if result.get("success"):
+        return jsonify(result), 201
+    return jsonify(result), 500
+
+@app.route('/api/export/<group_name>', methods=['GET'])
+def export_group(group_name):
+    """API Endpoint to export a problem group as ZIP."""
+    zip_path = export_group_as_zip(group_name)
+    if zip_path and os.path.exists(zip_path):
+        return send_file(zip_path, as_attachment=True, download_name=f"{group_name}.zip")
+    return jsonify({"error": "Group not found or export failed"}), 404
+
+@app.route('/api/import/bulk', methods=['POST'])
+def import_bulk():
+    """API Endpoint to import a ZIP file."""
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+    
+    if file and file.filename.endswith('.zip'):
+        # Save temp
+        temp_path = os.path.join("temp", file.filename)
+        file.save(temp_path)
+        
+        result = import_bulk_zip(temp_path)
+        
+        # Cleanup
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+            
+        return jsonify(result)
+        
+    return jsonify({"error": "Invalid file type. Only ZIP allowed."}), 400
 
 
 if __name__ == '__main__':
