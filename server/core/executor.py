@@ -16,27 +16,13 @@ def execute_code(language, code, input_data):
     if language == "cpp":
         filename = os.path.join(TEMP_DIR, f"{unique_id}.cpp")
         exe_file = os.path.join(TEMP_DIR, unique_id)
+        # No header replacement needed now that we have the include file
         processed_code = code
-        if "#include <bits/stdc++.h>" in code:
-            headers = """
-#include <iostream>
-#include <vector>
-#include <string>
-#include <algorithm>
-#include <cmath>
-#include <map>
-#include <set>
-#include <queue>
-#include <stack>
-#include <numeric>
-// Add other headers as needed
-"""
-            processed_code = code.replace("#include <bits/stdc++.h>", headers)
 
         with open(filename, "w") as f:
             f.write(processed_code)
         
-        compile_cmd = ["g++", "-std=c++17", filename, "-o", exe_file]
+        compile_cmd = ["g++", "-std=c++17", "-I", os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'include')), filename, "-o", exe_file]
         run_cmd = [exe_file]
     
     elif language == "python":

@@ -497,6 +497,7 @@
         const app = document.getElementById('app');
         let allProblems = [];
         let problemGroups = {};
+        let currentSubmissions = [];
 
         async function init() {
             await loadProblems();
@@ -964,15 +965,20 @@
             app.innerHTML = '<div style="text-align:center; padding:50px;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
             try {
                 const res = await fetch(`/api/problems/${id}`);
-                const problem = await res.json();
+                const probData = await res.json();
+                console.log("Loaded problem data", probData);
 
                 // Submissions
                 const subRes = await fetch(`/api/submissions/${id}`);
                 const submissions = await subRes.json();
-                let subHtml = submissions.map(s => `
-                    <div style="padding:10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
-                        <span style="color:${s.status === 'Accepted' ? 'green' : 'red'}; font-weight:bold;">${s.status}</span>
-                        <span style="font-size:0.8rem; color:#888;">${new Date(s.timestamp).toLocaleString()}</span>
+                currentSubmissions = submissions;
+                let subHtml = submissions.map((s, index) => `
+                    <div style="padding:10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span style="color:${s.status === 'Accepted' ? 'green' : 'red'}; font-weight:bold;">${s.status}</span>
+                            <div style="font-size:0.8rem; color:#888;">${new Date(s.timestamp).toLocaleString()}</div>
+                        </div>
+                        <button class="secondary" style="padding:4px 8px; font-size:0.8rem;" onclick="viewSubmission(${index})">View</button>
                     </div>
                     `).join('');
 
@@ -980,10 +986,10 @@
                     <div class="container animated fadeIn">
                     <div class="problem-header">
                         <div>
-                            <h1 style="margin:0 0 10px 0;">${problem.title}</h1>
+                            <h1 style="margin:0 0 10px 0;">${probData.title}</h1>
                             <div style="display:flex; gap:10px;">
-                                <span class="badge ${problem.status === 'Solved' ? 'badge-solved' : 'badge-unsolved'}">${problem.id}</span>
-                                <span class="badge badge-unsolved">${problem.rating || 'Unrated'}</span>
+                                <span class="badge ${probData.status === 'Solved' ? 'badge-solved' : 'badge-unsolved'}">${probData.id}</span>
+                                <span class="badge badge-unsolved">${probData.rating || 'Unrated'}</span>
                             </div>
                         </div>
                         <div style="display:flex; align-items:center; gap:20px;">
@@ -996,7 +1002,7 @@
                                     <span style="cursor:pointer; color:red;" onclick="resetTimer()"><i class="fas fa-undo"></i></span>
                                 </div>
                            </div>
-                           <i class="favorite-btn ${problem.is_favorite ? 'fas' : 'far'} fa-star fa-lg" style="color:#f1c40f; cursor:pointer;" onclick="toggleFavorite('${id}')"></i>
+                           <i class="favorite-btn ${probData.is_favorite ? 'fas' : 'far'} fa-star fa-lg" style="color:#f1c40f; cursor:pointer;" onclick="toggleFavorite('${id}')"></i>
                         </div>
                     </div>
 
@@ -1007,7 +1013,7 @@
                     </div>
 
                     <div id="desc" class="tab-content active">
-                        <div class="description">${marked.parse(problem.description || '')}</div>
+                        <div class="description">${marked.parse(probData.description || '')}</div>
                         
                          <h3 style="margin-top:30px;">Editor</h3>
                          <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
@@ -1034,7 +1040,7 @@
 
                     <div id="editorial" class="tab-content">
                         <div class="description">
-                            ${problem.editorial ? marked.parse(problem.editorial) : '<p>No editorial available.</p>'}
+                            ${probData.editorial ? marked.parse(probData.editorial) : '<p>No editorial available.</p>'}
                         </div>
                     </div>
 
@@ -1334,6 +1340,50 @@
             const newTheme = curr === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', newTheme);
             document.getElementById('theme-icon').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // --- Submission Viewer ---
+        function viewSubmission(index) {
+            const s = currentSubmissions[index];
+            if (!s) return;
+
+            const modal = document.getElementById('custom-modal');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+
+            title.innerText = "Submission Details";
+
+            // Format details
+            let content = `
+                <div style="margin-bottom:15px; border-bottom:1px solid #ddd; padding-bottom:10px;">
+                    <strong>Status:</strong> <span style="color:${s.status === 'Accepted' ? 'green' : 'red'}">${s.status}</span><br>
+                    <strong>Language:</strong> ${s.language}<br>
+                    <strong>Time:</strong> ${new Date(s.timestamp).toLocaleString()}
+                </div>
+                <strong>Code:</strong>
+                <pre style="background:#f5f5f5; padding:10px; border-radius:4px; max-height:300px; overflow:auto;"><code class="language-${s.language}">${s.code}</code></pre>
+            `;
+
+            if (s.output) {
+                content += `
+                    <strong>Output/Error:</strong>
+                    <pre style="background:#fff3e0; padding:10px; border-radius:4px; max-height:150px; overflow:auto;">${s.output}</pre>
+                `;
+            }
+
+            body.innerHTML = content;
+            confirmBtn.style.display = 'none'; // No action needed, just view
+            modal.style.display = 'block';
+
+            // Re-highlight if prism is available
+            if (typeof Prism !== 'undefined') {
+                Prism.highlightAllUnder(body);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('custom-modal').style.display = 'none';
         }
 
         // Init
