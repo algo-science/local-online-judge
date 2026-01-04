@@ -11,23 +11,50 @@ A lightweight, local competitive programming judge and problem manager.
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Python 3.8+
-- Mac/Linux (Shell environment)
+### General Prerequisites
+- **Python 3.8+** (Must be in your system PATH).
+- **C++ Compiler**:
+    - **macOS**: `clang` / `g++` (Install via `xcode-select --install`).
+    - **Linux**: `g++` (Install via `sudo apt install build-essential`).
+    - **Windows**: `g++` (Install MinGW or similar and add to PATH).
 
-### Installation
-1.  **Clone/Download** this repository.
-2.  Run the setup script:
+---
+
+### 🍎 macOS / 🐧 Linux
+
+1.  **Setup**:
+    Open a terminal in the project root and run:
     ```bash
     ./setup.sh
     ```
+    *This creates the virtual environment and installs dependencies.*
 
-### Running the App
-1.  Start the server:
+2.  **Run**:
+    Start the server:
     ```bash
     ./run.sh
     ```
-2.  Open your browser to: [http://localhost:5002](http://localhost:5002)
+    Open [http://localhost:5002](http://localhost:5002) in your browser.
+
+---
+
+### 🪟 Windows
+
+1.  **Setup**:
+    Double-click `setup.bat` or run in Command Prompt:
+    ```cmd
+    setup.bat
+    ```
+    *This checks for Python/g++, creates a virtual environment, and installs dependencies.*
+
+2.  **Run**:
+    Double-click `run.bat` or run in Command Prompt:
+    ```cmd
+    run.bat
+    ```
+    Open [http://localhost:5002](http://localhost:5002) in your browser.
+
+---
 
 ## 📁 Directory Structure
 - `server/`: Backend Flask app and problem data.
