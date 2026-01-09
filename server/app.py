@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template, send_file
 from core.executor import execute_code
 from core.file_handler import get_problems_from_fs, get_problem_from_fs, get_submissions_from_fs, save_submission_to_fs, get_quizzes_from_fs, read_sessions, write_sessions, read_tags, write_tags, read_favorites, write_favorites, read_ratings, write_ratings, create_problem_on_fs, export_group_as_zip, import_bulk_zip
 from core.ai_review import get_ai_review
+from core.interview import get_ai_interview_response
 from utils.importer import import_problems
 from core import calendar_handler
 from core.generator import generate_test_cases
@@ -447,6 +448,23 @@ def import_bulk():
         return jsonify(result)
         
     return jsonify({"error": "Invalid file type. Only ZIP allowed."}), 400
+
+
+@app.route('/interview')
+def interview_page():
+    """Renders the mock interview page."""
+    return render_template('interview.html')
+
+@app.route('/api/interview/chat', methods=['POST'])
+def interview_chat():
+    """Handles chat interaction for the mock interview."""
+    data = request.get_json()
+    chat_history = data.get('history', [])
+    user_message = data.get('message', '')
+    context = data.get('context', {})
+    
+    response = get_ai_interview_response(chat_history, user_message, context)
+    return jsonify(response)
 
 
 if __name__ == '__main__':

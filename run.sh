@@ -17,4 +17,4 @@ if lsof -Pi :5002 -sTCP:LISTEN -t >/dev/null ; then
 fi
 
 echo "🟢 Server starting on http://localhost:5002"
-python3 app.py
+python3 -u app.py

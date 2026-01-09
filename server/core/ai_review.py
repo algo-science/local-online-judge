@@ -22,7 +22,7 @@ def get_ai_review(code, problem_context, chat_history=None, user_message=None):
 
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-2.0-flash')
 
         # Context construction
         system_context = f"""

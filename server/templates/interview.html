@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Interview | System Design</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --light: #ecf0f1;
+            --bg-body: #f5f6fa;
+            --bg-container: white;
+            --text-main: #333;
+            --border: #ddd;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        nav {
+            background: var(--primary);
+            color: white;
+            padding: 0 1rem;
+            height: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Left Panel: Design Canvas */
+        .design-panel {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            padding: 10px;
+            overflow-y: auto;
+            gap: 10px;
+            background: var(--bg-container);
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .req-container {
+            display: flex;
+            gap: 10px;
+            height: 30%;
+            min-height: 200px;
+        }
+
+        .req-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .diagram-container {
+            display: flex;
+            flex: 1;
+            min-height: 400px;
+            gap: 10px;
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+        }
+
+        .editor-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-box {
+            flex: 1;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 10px;
+            background: white;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* CodeMirror Size Override */
+        .CodeMirror {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            height: 100%;
+            font-size: 14px;
+        }
+
+        /* Right Panel: AI Interviewer */
+        .chat-panel {
+            flex: 1.5;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            min-width: 350px;
+        }
+
+        .chat-header {
+            padding: 10px;
+            background: var(--accent);
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-history {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #f9f9f9;
+        }
+
+        .message {
+            padding: 10px 15px;
+            border-radius: 10px;
+            max-width: 85%;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .msg-model {
+            align-self: flex-start;
+            background: #e3f2fd;
+            color: #333;
+        }
+
+        .msg-user {
+            align-self: flex-end;
+            background: #dcf8c6;
+            color: #333;
+        }
+
+        .chat-input-area {
+            padding: 10px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            background: white;
+        }
+
+        .chat-input-area textarea {
+            height: 50px;
+            resize: none;
+        }
+
+        .btn-send {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-send:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="logo">
+            <a href="/"><i class="fas fa-arrow-left"></i> Back to Problems</a>
+        </div>
+        <div>System Design Mock Interview</div>
+    </nav>
+
+    <div class="container">
+        <!-- Left: Design Canvas -->
+        <div class="design-panel">
+
+            <!-- Requirements Section -->
+            <div class="req-container">
+                <div class="req-box">
+                    <div class="section-title"><i class="fas fa-list-ul"></i> Functional Requirements</div>
+                    <textarea id="functional-req"
+                        placeholder="- Users can sign up...&#10;- User can shorten URL..."></textarea>
+                </div>
+                <div class="req-box">
+                    <div class="section-title"><i class="fas fa-tachometer-alt"></i> Non-Functional Requirements</div>
+                    <textarea id="non-functional-req"
+                        placeholder="- High availability (99.9%)...&#10;- Low latency (<100ms)..."></textarea>
+                </div>
+            </div>
+
+            <!-- Diagram Section -->
+            <div class="section-title"><i class="fas fa-project-diagram"></i> System Flow (Mermaid.js)</div>
+            <div class="diagram-container">
+                <div class="editor-box">
+                    <textarea id="mermaid-code">graph TD
+    User -->|Http Request| LB[Load Balancer]
+    LB -->|Distribute| Web[Web Server]
+    Web -->|Read/Write| DB[(Database)]
+    Web -->|Cache| Redis[(Redis Cache)]
+</textarea>
+                </div>
+                <div class="preview-box">
+                    <div id="mermaid-preview" class="mermaid">
+                        graph TD
+                        User -->|Http Request| LB[Load Balancer]
+                        LB -->|Distribute| Web[Web Server]
+                        Web -->|Read/Write| DB[(Database)]
+                        Web -->|Cache| Redis[(Redis Cache)]
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: AI Chat -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <i class="fas fa-robot"></i> Senior Interviewer
+            </div>
+            <div class="chat-history" id="chat-history">
+                <div class="message msg-model">
+                    Hello! I am your interviewer today. I'll be assessing your system design skills. <br><br>
+                    Please start by defining the **Functional** and **Non-Functional** requirements for the system you
+                    want to design, and sketch a high-level flow. <br><br>
+                    What system are we designing today?
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <textarea id="user-input" placeholder="Type your answer... (Ctrl+Enter to send)"></textarea>
+                <button class="btn-send" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mermaid JS -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+        window.mermaid = mermaid;
+    </script>
+
+    <script>
+        // Initialize CodeMirror for Mermaid
+        let mermaidEditor;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            mermaidEditor = CodeMirror.fromTextArea(document.getElementById('mermaid-code'), {
+                mode: 'null', // Mermaid doesn't have a default CM mode, plain text is fine or custom
+                theme: 'monokai',
+                lineNumbers: true
+            });
+
+            // Auto-render on change with debounce
+            let timeout = null;
+            mermaidEditor.on('change', () => {
+                clearTimeout(timeout);
+                timeout = setTimeout(renderDiagram, 1000);
+            });
+
+            // Handle Chat Input Enter key
+            document.getElementById('user-input').addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    sendMessage();
+                }
+            });
+
+            // Initial render
+            renderDiagram();
+        });
+
+        async function renderDiagram() {
+            const code = mermaidEditor.getValue();
+            const preview = document.getElementById('mermaid-preview');
+
+            try {
+                // Validate basic synthax safety if needed, ideally mermaid handles errors
+                preview.removeAttribute('data-processed'); // Force re-render
+                preview.innerHTML = code;
+                await window.mermaid.run({
+                    nodes: [preview]
+                });
+            } catch (e) {
+                console.error("Mermaid error:", e);
+                preview.innerHTML = `<div style="color:red; padding:10px;">Syntax Error: ${e.message}</div>`;
+            }
+        }
+
+        // Chat Logic
+        const chatHistory = []; // Local history to send to backend for stateless API
+
+        async function sendMessage() {
+            const inputEl = document.getElementById('user-input');
+            const message = inputEl.value.trim();
+            if (!message) return;
+
+            // UI: Add User Message
+            addToChat('user', message);
+            inputEl.value = '';
+
+            // Context Gathering
+            const functional = document.getElementById('functional-req').value;
+            const nonFunctional = document.getElementById('non-functional-req').value;
+            const diagramCode = mermaidEditor.getValue();
+
+            const context = {
+                functional_req: functional,
+                non_functional_req: nonFunctional,
+                diagram: diagramCode
+            };
+
+            // UI: Add Loading Spinner
+            const loadingId = addToChat('model', '<i class="fas fa-spinner fa-spin"></i> Thinking...');
+
+            try {
+                const res = await fetch('/api/interview/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message,
+                        context: context,
+                        history: chatHistory
+                    })
+                });
+
+                const data = await res.json();
+
+                // Remove Loading
+                document.getElementById(loadingId).remove();
+
+                if (data.error) {
+                    addToChat('model', `*Error: ${data.error}*`);
+                } else {
+                    addToChat('model', data.reply);
+                    chatHistory.push({ role: 'user', parts: [message] });
+                    chatHistory.push({ role: 'model', parts: [data.reply] });
+                }
+
+            } catch (e) {
+                document.getElementById(loadingId).remove();
+                addToChat('model', `*System Error: ${e.message}*`);
+            }
+        }
+
+        function addToChat(role, text) {
+            const historyDiv = document.getElementById('chat-history');
+            const d = document.createElement('div');
+            d.className = `message msg-${role}`;
+            d.id = 'msg-' + Date.now();
+            d.innerHTML = role === 'model' ? marked.parse(text) : text.replace(/\n/g, '<br>');
+            historyDiv.appendChild(d);
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+            return d.id;
+        }
+
+    </script>
+
+</body>
+
+</html>
