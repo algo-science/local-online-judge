@@ -1,0 +1,8 @@
+{
+    "title": "Uber Driver Heatmap",
+    "type": "system_design",
+    "description": "Design a real-time and historical heatmap system for Uber drivers.",
+    "difficulty": "Hard",
+    "tags": ["System Design", "Big Data", "Real-time", "Batch Processing"],
+    "test_cases": [] 
+}

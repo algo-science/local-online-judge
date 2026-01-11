@@ -10,8 +10,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
 
     <style>
+        /* Updated CSS for Stepper and Views */
         :root {
             --primary: #2c3e50;
             --accent: #3498db;
@@ -20,6 +23,8 @@
             --bg-container: white;
             --text-main: #333;
             --border: #ddd;
+            --step-active: #27ae60;
+            --step-inactive: #bdc3c7;
         }
 
         body {
@@ -58,14 +63,95 @@
 
         /* Left Panel: Design Canvas */
         .design-panel {
-            flex: 3;
+            flex: 4;
+            /* Increased from 3 to give more workspace */
             display: flex;
             flex-direction: column;
             border-right: 1px solid var(--border);
-            padding: 10px;
-            overflow-y: auto;
-            gap: 10px;
+            padding: 0;
             background: var(--bg-container);
+            position: relative;
+        }
+
+        /* Stepper */
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+
+        .step-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: var(--step-inactive);
+            z-index: -1;
+        }
+
+        .step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--step-inactive);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+        }
+
+        .step-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+
+        .step-item.active .step-circle {
+            background: var(--accent);
+        }
+
+        .step-item.completed .step-circle {
+            background: var(--step-active);
+        }
+
+        .step-item.active .step-label {
+            color: var(--accent);
+        }
+
+        /* Multi-View Content */
+        .view-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .view-step {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .view-step.active {
+            display: flex;
         }
 
         .section-title {
@@ -77,20 +163,41 @@
             gap: 5px;
         }
 
-        .req-container {
+        /* Controls */
+        .controls {
+            padding: 15px;
+            border-top: 1px solid var(--border);
             display: flex;
-            gap: 10px;
-            height: 30%;
-            min-height: 200px;
+            justify-content: space-between;
+            background: #fff;
         }
 
-        .req-box {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
         }
 
-        textarea {
+        .btn-model {
+            background: #f1c40f;
+            /* Yellowish */
+            color: #2c3e50;
+        }
+
+        .btn-next {
+            background: var(--step-active);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Specific Inputs */
+        textarea.req-input {
             flex: 1;
             padding: 10px;
             border: 1px solid var(--border);
@@ -99,34 +206,18 @@
             font-family: inherit;
         }
 
-        .diagram-container {
+        .req-split {
             display: flex;
-            flex: 1;
-            min-height: 400px;
             gap: 10px;
-            border-top: 1px solid var(--border);
-            padding-top: 10px;
+            height: 100%;
         }
 
-        .editor-box {
+        .req-col {
             flex: 1;
             display: flex;
             flex-direction: column;
         }
 
-        .preview-box {
-            flex: 1;
-            border: 1px solid var(--border);
-            border-radius: 5px;
-            padding: 10px;
-            background: white;
-            overflow: auto;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-        }
-
-        /* CodeMirror Size Override */
         .CodeMirror {
             flex: 1;
             border: 1px solid #ddd;
@@ -135,13 +226,26 @@
             font-size: 14px;
         }
 
+        .diagram-preview {
+            flex: 1;
+            border: 1px solid var(--border);
+            padding: 10px;
+            background: white;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
         /* Right Panel: AI Interviewer */
         .chat-panel {
-            flex: 1.5;
+            flex: 1.2;
+            /* Reduced from 1.5 to provide more Code Editor space */
             display: flex;
             flex-direction: column;
             background: #fff;
-            min-width: 350px;
+            min-width: 300px;
+            border-left: 1px solid var(--border);
         }
 
         .chat-header {
@@ -207,9 +311,231 @@
             font-weight: bold;
         }
 
-        .btn-send:hover {
+        .btn-mic {
+            background: transparent;
+            color: #7f8c8d;
+            border: 1px solid var(--border);
+            padding: 0 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-mic.listening {
+            color: #e74c3c;
+            border-color: #e74c3c;
+            animation: pulse 1.5s infinite;
+        }
+
+        .btn-speaker {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.1rem;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .btn-speaker:hover {
+            opacity: 1;
+        }
+
+        .btn-speaker.muted {
+            opacity: 0.4;
+            text-decoration: line-through;
+        }
+
+        /* Voice Mode Modal */
+        #voice-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(44, 62, 80, 0.98);
+            z-index: 3000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: opacity 0.3s;
+        }
+
+        #voice-modal.active {
+            display: flex;
+        }
+
+        .voice-visualizer {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 40px;
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .voice-visualizer i {
+            font-size: 3rem;
+            color: white;
+        }
+
+        .voice-visualizer.listening {
+            background: rgba(231, 76, 60, 0.2);
+            animation: pulse-large 2s infinite;
+        }
+
+        .voice-visualizer.speaking {
+            background: rgba(52, 152, 219, 0.2);
+            animation: pulse-blue 1.5s infinite;
+        }
+
+        .voice-transcript {
+            font-size: 1.5rem;
+            text-align: center;
+            max-width: 80%;
+            min-height: 100px;
+            line-height: 1.6;
+            margin-bottom: 20px;
             opacity: 0.9;
         }
+
+        .voice-controls {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .btn-voice-control {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-voice-control:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-voice-close {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: transparent;
+            border: none;
+            color: #bdc3c7;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        @keyframes pulse-large {
+            0% {
+                box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 30px rgba(231, 76, 60, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+            }
+        }
+
+        @keyframes pulse-blue {
+            0% {
+                box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 30px rgba(52, 152, 219, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(52, 152, 219, 0);
+            }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+
+        .level-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .level-options {
+            display: flex;
+            gap: 10px;
+            margin: 30px 0;
+        }
+
+        .level-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+            background: #fff;
+        }
+
+        .level-btn:hover {
+            border-color: var(--accent);
+            background: #f0f7ff;
+        }
+
+        .level-btn.selected {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .start-btn {
+            background: #27ae60;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .start-btn.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Right: AI Chat - SHARED but styled slightly diff? No, share it */
     </style>
 </head>
 
@@ -219,67 +545,203 @@
         <div class="logo">
             <a href="/"><i class="fas fa-arrow-left"></i> Back to Problems</a>
         </div>
-        <div>System Design Mock Interview</div>
+        <div id="nav-title">System Design Mock Interview</div>
     </nav>
 
-    <div class="container">
+    <div class="container" id="container-design" style="display:none;">
         <!-- Left: Design Canvas -->
         <div class="design-panel">
 
-            <!-- Requirements Section -->
-            <div class="req-container">
-                <div class="req-box">
-                    <div class="section-title"><i class="fas fa-list-ul"></i> Functional Requirements</div>
-                    <textarea id="functional-req"
-                        placeholder="- Users can sign up...&#10;- User can shorten URL..."></textarea>
+            <!-- Stepper -->
+            <div class="stepper">
+                <div class="step-item active" id="step-nav-1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Reqs</div>
                 </div>
-                <div class="req-box">
-                    <div class="section-title"><i class="fas fa-tachometer-alt"></i> Non-Functional Requirements</div>
-                    <textarea id="non-functional-req"
-                        placeholder="- High availability (99.9%)...&#10;- Low latency (<100ms)..."></textarea>
+                <div class="step-item" id="step-nav-2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Entities</div>
+                </div>
+                <div class="step-item" id="step-nav-3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">API</div>
+                </div>
+                <div class="step-item" id="step-nav-4">
+                    <div class="step-circle">4</div>
+                    <div class="step-label">Flow</div>
+                </div>
+                <div class="step-item" id="step-nav-5">
+                    <div class="step-circle">5</div>
+                    <div class="step-label">Design</div>
+                </div>
+                <div class="step-item" id="step-nav-6">
+                    <div class="step-circle">6</div>
+                    <div class="step-label">Scale</div>
                 </div>
             </div>
 
-            <!-- Diagram Section -->
-            <div class="section-title"><i class="fas fa-project-diagram"></i> System Flow (Mermaid.js)</div>
-            <div class="diagram-container">
-                <div class="editor-box">
-                    <textarea id="mermaid-code">graph TD
-    User -->|Http Request| LB[Load Balancer]
-    LB -->|Distribute| Web[Web Server]
-    Web -->|Read/Write| DB[(Database)]
-    Web -->|Cache| Redis[(Redis Cache)]
+            <!-- View Content -->
+            <div class="view-content">
+
+                <!-- Step 1: Requirements -->
+                <div class="view-step active" id="view-step-1">
+                    <div class="req-split">
+                        <div class="req-col">
+                            <div class="section-title"><i class="fas fa-list-ul"></i> Functional Requirements</div>
+                            <textarea id="functional-req" class="req-input"
+                                placeholder="- Users can sign up...&#10;- User can shorten URL..."></textarea>
+                        </div>
+                        <div class="req-col">
+                            <div class="section-title"><i class="fas fa-tachometer-alt"></i> Non-Functional Requirements
+                            </div>
+                            <textarea id="non-functional-req" class="req-input"
+                                placeholder="- High availability (99.9%)...&#10;- Low latency (<100ms)..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Core Entities -->
+                <div class="view-step" id="view-step-2">
+                    <div class="section-title"><i class="fas fa-database"></i> Core Entities / Data Model</div>
+                    <textarea id="entities-editor" style="display:none;"># Example Entity
+User:
+  id: uuid
+  name: string
+  email: string
 </textarea>
                 </div>
-                <div class="preview-box">
-                    <div id="mermaid-preview" class="mermaid">
-                        graph TD
-                        User -->|Http Request| LB[Load Balancer]
-                        LB -->|Distribute| Web[Web Server]
-                        Web -->|Read/Write| DB[(Database)]
-                        Web -->|Cache| Redis[(Redis Cache)]
+
+                <!-- Step 3: API or Interface -->
+                <div class="view-step" id="view-step-3">
+                    <div class="section-title"><i class="fas fa-code"></i> API Definitions</div>
+                    <textarea id="api-editor" style="display:none;">POST /api/v1/shorten
+Request:
+{
+  "original_url": "https://..."
+}
+Response:
+{
+  "short_code": "xD7s9"
+}</textarea>
+                </div>
+
+                <!-- Step 4: Data Flow -->
+                <div class="view-step" id="view-step-4">
+                    <div class="section-title"><i class="fas fa-random"></i> Data Flow (Sequence Diagram)</div>
+                    <div class="req-split" style="flex-direction:row;">
+                        <div class="editor-box" style="flex:1; display:flex; flex-direction:column;">
+                            <textarea id="flow-code">sequenceDiagram
+    participant User
+    participant Server
+    User->>Server: HTTP Request
+    Server-->>User: Response</textarea>
+                        </div>
+                        <div class="diagram-preview">
+                            <div id="flow-preview" class="mermaid"></div>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Step 5: High-level Design -->
+                <div class="view-step" id="view-step-5">
+                    <div class="section-title"><i class="fas fa-project-diagram"></i> System Architecture</div>
+                    <div class="req-split" style="flex-direction:row;">
+                        <div class="editor-box" style="flex:1; display:flex; flex-direction:column;">
+                            <textarea id="hld-code">graph TD
+    User -->|Http Request| LB[Load Balancer]
+    LB -->|Distribute| Web[Web Server]</textarea>
+                        </div>
+                        <div class="diagram-preview">
+                            <div id="hld-preview" class="mermaid"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 6: Deep Dives -->
+                <div class="view-step" id="view-step-6">
+                    <div class="section-title"><i class="fas fa-search-plus"></i> Deep Dives & Bottlenecks</div>
+                    <textarea id="deep-dive-notes" class="req-input" placeholder="Notes..."></textarea>
+                </div>
+
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button class="btn btn-model" onclick="generateModelAnswer()"><i class="fas fa-lightbulb"></i> View
+                    Model Answer</button>
+                <button class="btn btn-next" onclick="nextStep()" id="btn-next-step">Next: Core Entities <i
+                        class="fas fa-arrow-right"></i></button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Container for DSA -->
+    <div class="container" id="container-dsa" style="display:none;">
+        <div class="design-panel">
+            <div
+                style="padding: 20px; font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between;">
+                <span id="dsa-title">Loading...</span>
+                <span style="font-size: 0.9rem; color: #666; font-style: italic;">
+                    <i class="fas fa-info-circle"></i> Whiteboard Mode (No Execution)
+                </span>
+            </div>
+
+            <div style="display:flex; flex:1; overflow:hidden;">
+                <!-- Problem Statement: Reduced width -->
+                <div
+                    style="flex:0.8; padding:20px; overflow-y:auto; border-right:1px solid #ddd; max-width: 35%; background: #fdfdfd;">
+                    <div id="dsa-problem-desc" style="line-height:1.6; font-size: 0.95rem;"></div>
+                </div>
+
+                <!-- Code Editor: Increased width -->
+                <div style="flex:2; display:flex; flex-direction:column;">
+                    <textarea id="dsa-code-editor"></textarea>
+                    <!-- Removed Console Output since execution is disabled -->
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Right: AI Chat -->
-        <div class="chat-panel">
-            <div class="chat-header">
-                <i class="fas fa-robot"></i> Senior Interviewer
+
+    <!-- Right: AI Chat -->
+    <div class="chat-panel">
+        <div class="chat-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="btn-speaker" onclick="toggleVoiceMode()" title="Enter Voice Mode">
+                    <i class="fas fa-expand-alt"></i>
+                </button>
+                <button class="btn-speaker" id="btn-speaker" onclick="toggleSpeaker()" title="Toggle Text-to-Speech">
+                    <i class="fas fa-volume-up"></i>
+                </button>
             </div>
-            <div class="chat-history" id="chat-history">
-                <div class="message msg-model">
-                    Hello! I am your interviewer today. I'll be assessing your system design skills. <br><br>
-                    Please start by defining the **Functional** and **Non-Functional** requirements for the system you
-                    want to design, and sketch a high-level flow. <br><br>
-                    What system are we designing today?
-                </div>
-            </div>
-            <div class="chat-input-area">
-                <textarea id="user-input" placeholder="Type your answer... (Ctrl+Enter to send)"></textarea>
-                <button class="btn-send" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-            </div>
+        </div>
+        <div class="chat-history" id="chat-history"></div>
+        <div class="chat-input-area">
+            <button class="btn-mic" id="btn-mic" onclick="toggleMic()" title="Dictate Answer">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <textarea id="user-input" placeholder="Type or dictate... (Ctrl+Enter to send)"></textarea>
+            <button class="btn-send" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- Voice Mode Modal -->
+    <div id="voice-modal">
+        <button class="btn-voice-close" onclick="toggleVoiceMode()"><i class="fas fa-times"></i></button>
+
+        <div class="voice-visualizer" id="voice-visualizer" onclick="toggleMic()">
+            <i class="fas fa-microphone" id="voice-icon"></i>
+        </div>
+
+        <div class="voice-transcript" id="voice-transcript">
+            "Click the microphone to start speaking..."
+        </div>
+
+        <div class="voice-controls">
+            <button class="btn-voice-control" onclick="sendMessageFromVoice()">Send Answer <i
+                    class="fas fa-paper-plane"></i></button>
+            <button class="btn-voice-control" onclick="clearVoice()">Clear</button>
         </div>
     </div>
 
@@ -289,77 +751,521 @@
         mermaid.initialize({ startOnLoad: true });
         window.mermaid = mermaid;
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
 
     <script>
-        // Initialize CodeMirror for Mermaid
-        let mermaidEditor;
+        // Editors
+        let editors = {}; // entities, api, flow, hld
+        let dsaEditor = null;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            mermaidEditor = CodeMirror.fromTextArea(document.getElementById('mermaid-code'), {
-                mode: 'null', // Mermaid doesn't have a default CM mode, plain text is fine or custom
-                theme: 'monokai',
-                lineNumbers: true
-            });
+        // Audio State
+        let isSpeakerOn = true;
+        let isListening = false;
+        let isVoiceMode = false;
+        let finalTranscript = '';
 
-            // Auto-render on change with debounce
-            let timeout = null;
-            mermaidEditor.on('change', () => {
-                clearTimeout(timeout);
-                timeout = setTimeout(renderDiagram, 1000);
-            });
+        const synth = window.speechSynthesis;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
 
-            // Handle Chat Input Enter key
-            document.getElementById('user-input').addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                    sendMessage();
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true; // CHANGED: Continued listening
+            recognition.interimResults = true; // CHANGED: Real-time feedback
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isListening = true;
+                updateMicUI(true);
+            };
+
+            recognition.onend = () => {
+                // If in Voice Mode and supposed to be listening, simpler to just stop.
+                // Or auto-restart? Let's stop to be safe, user can toggle.
+                isListening = false;
+                updateMicUI(false);
+
+                // Optional: Auto-restart if we want "always on" interview
+                // if (isVoiceMode) recognition.start();
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + ' ';
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
                 }
-            });
 
-            // Initial render
-            renderDiagram();
+                // Sync to Input Area
+                const input = document.getElementById('user-input');
+                // We overwrite input with full transcript for simplicity in this flow
+                // Or append? Let's append final, show interim.
+
+                // Better approach for continuous:
+                // Just update the UI views with (final + interim)
+                const displayText = finalTranscript + interimTranscript;
+
+                input.value = displayText;
+                document.getElementById('voice-transcript').innerText = displayText || "Listening...";
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech Error", event.error);
+                isListening = false;
+                updateMicUI(false);
+            };
+        }
+
+        function updateMicUI(listening) {
+            const btn = document.getElementById('btn-mic');
+            const visualizer = document.getElementById('voice-visualizer');
+            const icon = document.getElementById('voice-icon');
+
+            if (listening) {
+                btn.classList.add('listening');
+                btn.innerHTML = '<i class="fas fa-stop"></i>';
+
+                if (visualizer) {
+                    visualizer.classList.add('listening');
+                    icon.className = 'fas fa-stop';
+                }
+            } else {
+                btn.classList.remove('listening');
+                btn.innerHTML = '<i class="fas fa-microphone"></i>';
+
+                if (visualizer) {
+                    visualizer.classList.remove('listening');
+                    icon.className = 'fas fa-microphone';
+                }
+            }
+        }
+
+        function toggleVoiceMode() {
+            const modal = document.getElementById('voice-modal');
+            isVoiceMode = !isVoiceMode;
+
+            if (isVoiceMode) {
+                modal.classList.add('active');
+            } else {
+                modal.classList.remove('active');
+            }
+        }
+
+        function toggleSpeaker() {
+            isSpeakerOn = !isSpeakerOn;
+            const btn = document.getElementById('btn-speaker');
+            if (isSpeakerOn) {
+                btn.classList.remove('muted');
+                btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            } else {
+                btn.classList.add('muted');
+                btn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                synth.cancel();
+            }
+        }
+
+        function toggleMic() {
+            if (!recognition) return alert("Browser does not support Speech to Text.");
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                finalTranscript = ""; // Reset on new session? Or append? Let's reset for fresh answer.
+                document.getElementById('user-input').value = ""; // Sync
+                recognition.start();
+            }
+        }
+
+        function sendMessageFromVoice() {
+            sendMessage();
+            // Optionally close modal or keep open? 
+            // Keep open for continuous conversation.
+            // Maybe clear transcript?
+            finalTranscript = "";
+            document.getElementById('voice-transcript').innerText = "Sent! Waiting for reply...";
+        }
+
+        function clearVoice() {
+            finalTranscript = "";
+            document.getElementById('user-input').value = "";
+            document.getElementById('voice-transcript').innerText = "Cleared.";
+        }
+
+        function speakText(text) {
+            if (!isSpeakerOn) return;
+            if (synth.speaking) synth.cancel();
+
+            // Strip HTML/Markdown
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = marked.parse(text);
+            const cleanText = tempDiv.textContent || tempDiv.innerText || "";
+
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.rate = 1.0;
+
+            // Visualizer "Speaking" State
+            const visualizer = document.getElementById('voice-visualizer');
+            utterance.onstart = () => {
+                if (visualizer) visualizer.classList.add('speaking');
+            };
+            utterance.onend = () => {
+                if (visualizer) visualizer.classList.remove('speaking');
+            };
+
+            synth.speak(utterance);
+        }
+
+        // State
+        let currentStep = 1;
+        let currentProblemContext = "";
+        let currentLevel = "mid";
+        let currentProblemType = "system_design";
+        let currentProblemId = null;
+        const chatHistory = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+
+            // Extract Problem ID
+            const urlParams = new URLSearchParams(window.location.search);
+            currentProblemId = urlParams.get('problemId');
+
+            if (currentProblemId) {
+                try {
+                    const res = await fetch(`/api/problems/${currentProblemId}`);
+                    const data = await res.json();
+
+                    if (data.error) return alert("Problem error");
+
+                    // Set Type (Default to DSA if not system_design, or guess based on path)
+                    currentProblemType = data.type || "dsa"; // Default to DSA if missing
+                    if (data.id.includes("System_Design")) currentProblemType = "system_design";
+
+                    currentProblemContext = `Problem: ${data.title}\n\n${data.description}`;
+
+                    document.getElementById('chat-title').innerText = `Interview: ${data.title}`;
+
+                    if (currentProblemType === 'system_design') {
+                        // Init System Design UI
+                        document.getElementById('container-design').style.display = 'flex';
+                        initSystemDesign(data);
+                    } else {
+                        // Init DSA UI
+                        document.getElementById('container-dsa').style.display = 'flex';
+                        document.getElementById('nav-title').innerText = "DSA Mock Interview";
+                        initDSA(data);
+                    }
+
+                } catch (e) { console.error(e); }
+            } else {
+                // Listing Logic (omitted for brevity, assume user clicks from index)
+                window.location.href = "/";
+            }
         });
 
-        async function renderDiagram() {
-            const code = mermaidEditor.getValue();
-            const preview = document.getElementById('mermaid-preview');
+        function initSystemDesign(data) {
+            // Common Config
+            const commonConfig = { theme: 'monokai', lineNumbers: true };
+            editors.entities = CodeMirror.fromTextArea(document.getElementById('entities-editor'), { ...commonConfig, mode: 'markdown' });
+            editors.api = CodeMirror.fromTextArea(document.getElementById('api-editor'), { ...commonConfig, mode: 'javascript' });
+            editors.flow = CodeMirror.fromTextArea(document.getElementById('flow-code'), { ...commonConfig, mode: 'null' });
+            editors.hld = CodeMirror.fromTextArea(document.getElementById('hld-code'), { ...commonConfig, mode: 'null' });
+
+            // Mermaid setup (same as before)
+            const setupMermaidRender = (editorKey, previewId) => {
+                let timeout = null;
+                editors[editorKey].on('change', () => {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => renderDiagram(editors[editorKey], previewId), 1000);
+                });
+            };
+            setupMermaidRender('flow', 'flow-preview');
+            setupMermaidRender('hld', 'hld-preview');
+
+            showLevelSelectionModal(data);
+
+            // Inject System Design Greeting
+            const greeting = `Hello! I am your interviewer today. I'll be assessing your system design skills. <br><br>
+                    Please start by defining the **Functional** and **Non-Functional** requirements for the system you
+                    want to design, and sketch a high-level flow.`;
+            addToChat('model', greeting);
+            chatHistory.push({ role: 'model', parts: [greeting] });
+        }
+
+        function initDSA(data) {
+            document.getElementById('dsa-title').innerText = data.title;
+            document.getElementById('dsa-problem-desc').innerHTML = marked.parse(data.description);
+
+            dsaEditor = CodeMirror.fromTextArea(document.getElementById('dsa-code-editor'), {
+                theme: 'monokai',
+                lineNumbers: true,
+                mode: 'python' // Default to python for now
+            });
+            dsaEditor.setValue("# Write your solution for " + data.title + "\n\nclass Solution:\n    def solve(self):\n        pass");
+
+            // Start DSA Chat
+            const greeting = `**DSA Interview: ${data.title}**\n\nHello! I'm your interviewer. Please take a moment to read the problem. When you're ready, let me know your initial thoughts on the approach.`;
+            addToChat('model', greeting);
+            chatHistory.push({ role: 'model', parts: [`[System] Started DSA Interview for ${data.title}.`] });
+        }
+
+        async function runCode() {
+            const code = dsaEditor.getValue();
+            const consoleDiv = document.getElementById('dsa-console');
+            consoleDiv.innerText = "Running...";
 
             try {
-                // Validate basic synthax safety if needed, ideally mermaid handles errors
-                preview.removeAttribute('data-processed'); // Force re-render
-                preview.innerHTML = code;
-                await window.mermaid.run({
-                    nodes: [preview]
+                const res = await fetch('/api/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        problem_id: currentProblemId,
+                        language: 'python', // Hardcoded for prototype
+                        code: code,
+                        mode: 'run'
+                    })
                 });
+                const result = await res.json();
+
+                let outputText = "";
+                if (result.status === "Success" || result.status === "Accepted") {
+                    outputText = `Status: ${result.status}\nOutput: ${result.output}\n\nPassed: ${result.passed_count}/${result.total_count}`;
+                } else {
+                    outputText = `Error: ${result.status}\n${result.output || result.error}`;
+                }
+                consoleDiv.innerText = outputText;
+
+                // Notify AI of Run
+                // We don't block, just send context
+                const runContext = `User ran code. Status: ${result.status}. Output: ${result.output}`;
+                // We could silently push to history or just let next chat message pick it up?
+                // Let's rely on next message context.
+
+            } catch (e) {
+                consoleDiv.innerText = "System Error: " + e.message;
+            }
+        }
+
+        // --- Shared Logic ---
+
+        // (nextStep, generateModelAnswer, renderDiagram, gatherContext, sendMessage logic...)
+        // Need to update gatherContext to include type and dsa code
+
+        function gatherContext() {
+            if (currentProblemType === 'dsa') {
+                return {
+                    type: 'dsa',
+                    code: dsaEditor ? dsaEditor.getValue() : "",
+                    execution_output: document.getElementById('dsa-console') ? document.getElementById('dsa-console').innerText : "",
+                    problem_context: currentProblemContext
+                };
+            }
+
+            return {
+                type: 'system_design',
+                functional_req: document.getElementById('functional-req')?.value || "",
+                non_functional_req: document.getElementById('non-functional-req')?.value || "",
+                entities: editors.entities ? editors.entities.getValue() : "",
+                api: editors.api ? editors.api.getValue() : "",
+                flow: editors.flow ? editors.flow.getValue() : "",
+                hld: editors.hld ? editors.hld.getValue() : "",
+                deep_dives: document.getElementById('deep-dive-notes')?.value || "",
+                problem_context: currentProblemContext,
+                level: currentLevel,
+                current_step: currentStep
+            };
+        }
+
+        // Rest of callbacks (nextStep, etc) can stay if guarded or updated.
+        // nextStep only applies to system_design.
+
+
+
+        // --- Core Logic ---
+
+        async function nextStep() {
+            if (currentStep >= 6) return;
+
+            const btn = document.getElementById('btn-next-step');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validating...';
+            btn.disabled = true;
+
+            try {
+                // Validation Call
+                const context = gatherContext();
+                const res = await fetch('/api/interview/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'validate_step',
+                        step: currentStep,
+                        context: context,
+                        history: chatHistory
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.validation && !data.validation.approved) {
+                    addToChat('model', `### ⚠️ Validation Failed\n${data.validation.feedback}`);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    return; // Stop progress
+                } else if (data.validation && data.validation.approved) {
+                    addToChat('model', `### ✅ Step ${currentStep} Approved\n${data.validation.feedback}`);
+                }
+
+                // Proceed if approved (or if validation missing/skipped)
+
+                // 1. Update active view
+                document.getElementById(`view-step-${currentStep}`).classList.remove('active');
+                document.getElementById(`step-nav-${currentStep}`).classList.remove('active');
+                document.getElementById(`step-nav-${currentStep}`).classList.add('completed');
+
+                currentStep++;
+
+                document.getElementById(`view-step-${currentStep}`).classList.add('active');
+                const navItem = document.getElementById(`step-nav-${currentStep}`);
+                navItem.classList.add('active');
+
+                // 2. Refresh CodeMirror instances if they are in this view
+                setTimeout(() => {
+                    if (currentStep === 2) editors.entities.refresh();
+                    if (currentStep === 3) editors.api.refresh();
+                    if (currentStep === 4) { editors.flow.refresh(); renderDiagram(editors.flow, 'flow-preview'); }
+                    if (currentStep === 5) { editors.hld.refresh(); renderDiagram(editors.hld, 'hld-preview'); }
+                }, 50);
+
+                // 3. Update Button Text
+                const labels = ["", "Core Entities", "API", "Data Flow", "HLD", "Deep Dives", "Finish"];
+                if (currentStep < 6) {
+                    btn.innerHTML = `Next: ${labels[currentStep]} <i class="fas fa-arrow-right"></i>`;
+                } else {
+                    btn.innerHTML = `Finish Interview <i class="fas fa-flag-checkered"></i>`;
+                    btn.onclick = () => { alert("Interview Completed!"); };
+                }
+
+                // 4. Validate/Intro Transition (Auto-Guidance)
+                try {
+                    const introRes = await fetch('/api/interview/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'intro_step',
+                            step: currentStep,
+                            context: gatherContext(),
+                            history: chatHistory
+                        })
+                    });
+                    const introData = await introRes.json();
+                    if (introData.reply) {
+                        addToChat('model', introData.reply);
+                        chatHistory.push({ role: 'model', parts: [`[Guidance Step ${currentStep}] ${introData.reply}`] });
+                    }
+                } catch (err) {
+                    console.error("Intro step error", err);
+                }
+
+
+            } catch (e) {
+                console.error("Validation error:", e);
+                addToChat('model', `*Validation Error: ${e.message}*`);
+            } finally {
+                btn.disabled = false;
+                // Restore text if we didn't advance (handled above) 
+                // but if we advanced, exact text set in block above overrides this?
+                // Actually the above block sets text for NEXT step.
+                // So if we failed, we restored. If we succeeded, we set new text.
+                // We just need to make sure disabled is false.
+            }
+        }
+
+        async function generateModelAnswer() {
+            const loadingId = addToChat('model', '<i class="fas fa-spinner fa-spin"></i> Generating Model Answer...');
+
+            try {
+                // Gather minimal context context
+                const context = gatherContext();
+
+                const res = await fetch('/api/interview/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: "GENERATE_MODEL_ANSWER", // Special trigger
+                        action: 'model_answer',
+                        step: currentStep,
+                        context: context,
+                        history: chatHistory
+                    })
+                });
+
+                const data = await res.json();
+                document.getElementById(loadingId).remove();
+
+                if (data.error) {
+                    addToChat('model', `*Error: ${data.error}*`);
+                } else {
+                    addToChat('model', `### 💡 Model Answer (Step ${currentStep})\n\n${data.reply}`);
+                    chatHistory.push({ role: 'model', parts: [`[Model Answer Step ${currentStep}] ${data.reply}`] });
+                }
+
+            } catch (e) {
+                document.getElementById(loadingId).remove();
+                addToChat('model', `*Error: ${e.message}*`);
+            }
+        }
+
+        async function renderDiagram(editor, previewId) {
+            const code = editor.getValue();
+            const preview = document.getElementById(previewId);
+            try {
+                preview.removeAttribute('data-processed');
+                preview.innerHTML = code;
+                await window.mermaid.run({ nodes: [preview] });
             } catch (e) {
                 console.error("Mermaid error:", e);
                 preview.innerHTML = `<div style="color:red; padding:10px;">Syntax Error: ${e.message}</div>`;
             }
         }
 
-        // Chat Logic
-        const chatHistory = []; // Local history to send to backend for stateless API
+        function gatherContext() {
+            if (currentProblemType === 'dsa') {
+                return {
+                    type: 'dsa',
+                    code: dsaEditor ? dsaEditor.getValue() : "",
+                    execution_output: "", // Execution removed, but keeping field for compatibility or future use
+                    problem_context: currentProblemContext
+                };
+            }
+
+            return {
+                type: 'system_design',
+                functional_req: document.getElementById('functional-req')?.value || "",
+                non_functional_req: document.getElementById('non-functional-req')?.value || "",
+                entities: editors.entities ? editors.entities.getValue() : "",
+                api: editors.api ? editors.api.getValue() : "",
+                flow: editors.flow ? editors.flow.getValue() : "",
+                hld: editors.hld ? editors.hld.getValue() : "",
+                deep_dives: document.getElementById('deep-dive-notes')?.value || "",
+                problem_context: currentProblemContext,
+                level: currentLevel,
+                current_step: currentStep
+            };
+        }
 
         async function sendMessage() {
             const inputEl = document.getElementById('user-input');
             const message = inputEl.value.trim();
             if (!message) return;
 
-            // UI: Add User Message
             addToChat('user', message);
             inputEl.value = '';
 
-            // Context Gathering
-            const functional = document.getElementById('functional-req').value;
-            const nonFunctional = document.getElementById('non-functional-req').value;
-            const diagramCode = mermaidEditor.getValue();
-
-            const context = {
-                functional_req: functional,
-                non_functional_req: nonFunctional,
-                diagram: diagramCode
-            };
-
-            // UI: Add Loading Spinner
+            const context = gatherContext();
             const loadingId = addToChat('model', '<i class="fas fa-spinner fa-spin"></i> Thinking...');
 
             try {
@@ -374,8 +1280,6 @@
                 });
 
                 const data = await res.json();
-
-                // Remove Loading
                 document.getElementById(loadingId).remove();
 
                 if (data.error) {
@@ -395,16 +1299,114 @@
         function addToChat(role, text) {
             const historyDiv = document.getElementById('chat-history');
             const d = document.createElement('div');
-            d.className = `message msg-${role}`;
+            d.className = `message msg-${role} animated fadeIn`;
             d.id = 'msg-' + Date.now();
             d.innerHTML = role === 'model' ? marked.parse(text) : text.replace(/\n/g, '<br>');
             historyDiv.appendChild(d);
             historyDiv.scrollTop = historyDiv.scrollHeight;
+
+            // Speak if it's the model
+            if (role === 'model' && typeof speakText === 'function') {
+                speakText(text);
+            }
             return d.id;
         }
 
-    </script>
+        // --- Modals (Reused) ---
 
+        function showProblemSelectionModal(problems) {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0,0,0,0.85)';
+            overlay.style.display = 'flex';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+            overlay.style.zIndex = '1000';
+
+            const modal = document.createElement('div');
+            modal.style.background = 'white';
+            modal.style.padding = '30px';
+            modal.style.borderRadius = '10px';
+            modal.style.maxWidth = '500px';
+            modal.style.width = '90%';
+            modal.style.textAlign = 'center';
+
+            let listHtml = problems.length > 0 ?
+                problems.map(p => `
+                    <a href="/interview?problemId=${p.id}" style="display:block; padding:15px; margin:10px 0; background:#f5f6fa; border:1px solid #ddd; border-radius:5px; text-decoration:none; color:#333; font-weight:bold; transition:all 0.2s;">
+                        <i class="fas fa-project-diagram" style="color:#3498db; margin-right:10px;"></i> ${p.title}
+                    </a>
+                `).join('') :
+                '<p>No System Design problems found.</p>';
+
+            modal.innerHTML = `
+                <h2 style="color:#2c3e50; margin-top:0;">Select a Design Challenge</h2>
+                <p style="color:#666; margin-bottom:20px;">Choose a problem to start your mock interview.</p>
+                <div style="max-height:400px; overflow-y:auto; text-align:left;">
+                    ${listHtml}
+                </div>
+            `;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+        }
+
+        function showLevelSelectionModal(problemData) {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.innerHTML = `
+                <div class="level-card">
+                    <h2 style="color:var(--primary); margin-top:0;">Select Interview Level</h2>
+                    <p style="color:#666;">Choose the difficulty and persona for your interviewer.</p>
+                    
+                    <div class="level-options">
+                        <div class="level-btn" onclick="selectLevel(this, 'junior')">Junior</div>
+                        <div class="level-btn selected" onclick="selectLevel(this, 'mid')">Mid-Level</div>
+                        <div class="level-btn" onclick="selectLevel(this, 'senior')">Senior / Staff</div>
+                    </div>
+                    
+                    <button class="start-btn active" onclick="startInterview('${problemData.title}', \`${problemData.description.replace(/`/g, '\\`').replace(/'/g, "\\'")}\`)">Start Interview</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function selectLevel(btn, level) {
+            document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            currentLevel = level;
+        }
+
+        function startInterview(title, description) {
+            document.querySelector('.modal-overlay').remove();
+            let introMsg = "";
+            let persona = "";
+            if (currentLevel === 'junior') {
+                persona = "I am a helpful Senior Engineer.";
+                introMsg = `Hi! I'm here to help you design **${title}**. We'll follow the Delivery Framework steps.`;
+            } else if (currentLevel === 'mid') {
+                persona = "I am an Engineering Manager.";
+                introMsg = `Hello. We need to design **${title}**. Let's follow the standard framework.`;
+            } else { // senior
+                persona = "I am a Staff Engineer.";
+                introMsg = `I'm the Bar-Raiser. We are designing **${title}**. Focus on the 6-step framework.`;
+            }
+
+            const historyDiv = document.getElementById('chat-history');
+            historyDiv.innerHTML = `
+                <div class="message msg-model">
+                    ${marked.parse(`${introMsg}<br><br>Here is the task:<br>**${title}**<br>${description}<br><br>Let's start with **Step 1: Functional & Non-Functional Requirements**.`)}
+                </div>
+            `;
+            chatHistory.push({ role: 'model', parts: [`[System: Level=${currentLevel}] ${introMsg}`] });
+        }
+
+    </script>
 </body>
 
 </html>

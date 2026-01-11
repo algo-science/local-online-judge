@@ -1016,9 +1016,22 @@
                     <div id="desc" class="tab-content active">
                         <div class="description">${marked.parse(probData.description || '')}</div>
                         
-                         <h3 style="margin-top:30px;">Editor</h3>
+                        <h3 style="margin-top:30px;">${probData.type === 'system_design' ? 'Design Session' : 'Editor'}</h3>
+                        
+                        ${probData.type === 'system_design' ? `
+                            <div style="text-align:center; padding: 40px; background: var(--bg-body); border: 1px dashed var(--border); border-radius: 8px;">
+                                <i class="fas fa-project-diagram fa-3x" style="color: var(--accent); margin-bottom: 20px;"></i>
+                                <p style="font-size: 1.1rem; margin-bottom: 20px;">This is a System Design problem. Use the interactive Mock Interview tool to design the solution.</p>
+                                <a href="/interview?problemId=${id}" class="button" style="text-decoration:none; display:inline-block; padding: 10px 20px; background: var(--accent); color: white; border-radius: 5px; font-weight: bold;">
+                                    Start System Design Mock Interview <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        ` : `
                          <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
                              <div style="display:flex; gap: 10px; align-items:center;">
+                                <a href="/interview?problemId=${id}" class="button" style="text-decoration:none; background:#ff9800; color:white; font-size:0.9rem; padding: 8px 16px;">
+                                    <i class="fas fa-users"></i> Mock Interview
+                                </a>
                                 <select id="lang-select" style="padding:5px;" onchange="changeLanguage()">
                                     <option value="python">Python 3</option>
                                     <option value="cpp">C++</option>
@@ -1037,6 +1050,7 @@
                              <textarea id="code-area"></textarea>
                          </div>
                          <div id="result-area" style="margin-top:20px;"></div>
+                        `}
                     </div>
 
                     <div id="editorial" class="tab-content">

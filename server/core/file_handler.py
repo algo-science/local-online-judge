@@ -85,10 +85,26 @@ def get_problems_from_fs():
                                         status = "Solved"
                                         break
                     
+                    problem_type = "coding" # Default
+                    difficulty = "Medium"
+                    
+                    # Try to read metadata from info.json
+                    info_path = os.path.join(problem_path, 'info.json')
+                    if os.path.exists(info_path):
+                        try:
+                            with open(info_path, 'r') as f:
+                                info = json.load(f)
+                                problem_type = info.get('type', problem_type)
+                                difficulty = info.get('difficulty', difficulty)
+                        except:
+                            pass
+
                     all_problems.append({
                         "id": problem_id,
                         "title": title,
                         "status": status,
+                        "type": problem_type,
+                        "difficulty": difficulty,
                         "tags": tags_map.get(problem_id, []),
                         "is_favorite": problem_id in favorites,
                         "rating": ratings.get(problem_id, 0)

@@ -462,8 +462,10 @@ def interview_chat():
     chat_history = data.get('history', [])
     user_message = data.get('message', '')
     context = data.get('context', {})
+    action = data.get('action')
+    step = data.get('step')
     
-    response = get_ai_interview_response(chat_history, user_message, context)
+    response = get_ai_interview_response(chat_history, user_message, context, action, step)
     return jsonify(response)
 
 
